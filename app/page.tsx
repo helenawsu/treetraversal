@@ -1,101 +1,205 @@
-import Image from "next/image";
+"use client"
+import { useEffect, useRef, useState } from "react";
+import * as d3 from "d3";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [activeTraversals, setActiveTraversals] = useState({
+    preorder: true,
+    inorder: true,
+    postorder: true,
+    levelorder: true,
+  });
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const treeContainerRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const traversalAudioFiles = {
+    preorder: ["/audio/b6.mp3", "/audio/c6.mp3", "/audio/f6.mp3"],
+    inorder: ["/audio/f6.mp3", "/audio/c6.mp3", "/audio/b6.mp3"],
+    postorder: ["/audio/c6.mp3", "/audio/b6.mp3", "/audio/f6.mp3"],
+    levelorder: ["/audio/f6.mp3", "/audio/b6.mp3", "/audio/c6.mp3"], // Example
+  };
+  
+  const toggleTraversal = (order: string) => {
+    setActiveTraversals((prev) => ({
+      ...prev,
+      [order]: !prev[order],
+    }));
+  };
+  
+  const handlePlay = () => {
+    // Get active traversals and their corresponding audio files
+    const activeFiles = Object.keys(activeTraversals)
+      .filter((order) => activeTraversals[order as keyof typeof activeTraversals])
+      .map((order) => traversalAudioFiles[order as keyof typeof traversalAudioFiles]);
+  
+    // Play all active sequences simultaneously
+    playAudioSequencesSimultaneously(activeFiles);
+  };
+  
+  const playAudioSequencesSimultaneously = (filesPerTraversal: string[][]) => {
+    filesPerTraversal.forEach((files) => {
+      playSingleAudioSequence(files); // Play each sequence independently
+    });
+  };
+  
+  const playSingleAudioSequence = (files: string[]) => {
+    if (files.length === 0) return;
+  
+    let index = 0;
+    const audioPlayer = new Audio(); // Create a new <audio> element for this sequence
+  
+    const playNext = () => {
+      if (index < files.length) {
+        audioPlayer.src = files[index];
+        audioPlayer.play();
+        index++;
+      } else {
+        audioPlayer.removeEventListener("ended", playNext); // Clean up
+      }
+    };
+  
+    audioPlayer.addEventListener("ended", playNext);
+    playNext(); // Start playing the first file
+  };
+  
+  
+
+  useEffect(() => {
+    if (!treeContainerRef.current) return;
+
+    // Clear existing content
+    d3.select(treeContainerRef.current).selectAll("*").remove();
+
+    // Set up dimensions
+    const width = window.innerWidth;
+    const height = window.innerHeight - 100; // Adjust for title and checkboxes
+    const margin = { top: 50, right: 50, bottom: 50, left: 50 };
+    const treeWidth = width - margin.left - margin.right;
+    const treeHeight = height - margin.top - margin.bottom;
+
+    const treeData = {
+      name: "Root",
+      children: [
+        { name: "L", children: [{ name: "LL" }, { name: "LR" }] },
+        { name: "R", children: [{ name: "RL" }, { name: "RR" }] },
+      ],
+    };
+
+    // Create SVG
+    const svg = d3
+      .select(treeContainerRef.current)
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .append("g")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+    // Create tree layout
+    const tree = d3.tree().size([treeWidth, treeHeight]);
+    const root = d3.hierarchy(treeData);
+    tree(root);
+
+    // Render links
+    svg
+      .selectAll(".link")
+      .data(root.links())
+      .enter()
+      .append("path")
+      .attr("class", "link")
+      .attr("d", d3
+        .linkVertical()
+        .x((d) => d.x) // Swap x and y for top-down tree
+        .y((d) => d.y))
+      .style("fill", "none")
+      .style("stroke", "#ccc");
+
+    // Render nodes
+    const nodes = svg
+      .selectAll(".node")
+      .data(root.descendants())
+      .enter()
+      .append("g")
+      .attr("class", "node")
+      .attr("transform", (d) => `translate(${d.x},${d.y})`);
+
+    nodes
+      .append("circle")
+      .attr("r", 10)
+      .style("fill", "white")
+      .style("stroke", "black");
+
+    nodes
+      .append("text")
+      .attr("dy", -15)
+      .attr("text-anchor", "middle")
+      .text((d) => d.data.name);
+  }, []);
+
+  return (
+    <div className="absolute top-0 left-0 w-full h-full bg-gray-100">
+      {/* Title and Controls */}
+      <div
+        className="absolute top-4 left-0 w-full flex flex-col items-center gap-2 z-10 bg-gray-100"
+        style={{ pointerEvents: "auto" }}
+      >
+        <h1 className="text-2xl font-bold">Tree Traversal</h1>
+        <div className="flex gap-4">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={activeTraversals.preorder}
+              onChange={() => toggleTraversal("preorder")}
+              className="accent-red-500"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <span style={{ color: "red" }}>Preorder</span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={activeTraversals.inorder}
+              onChange={() => toggleTraversal("inorder")}
+              className="accent-green-500"
+            />
+            <span style={{ color: "green" }}>Inorder</span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={activeTraversals.postorder}
+              onChange={() => toggleTraversal("postorder")}
+              className="accent-blue-500"
+            />
+            <span style={{ color: "blue" }}>Postorder</span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={activeTraversals.levelorder}
+              onChange={() => toggleTraversal("levelorder")}
+              className="accent-yellow-500"
+            />
+            <span style={{ color: "yellow" }}>Level Order</span>
+          </label>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={handlePlay}
+          className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600"
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Play Music
+        </button>
+      </div>
+  
+      {/* Tree Visualization */}
+      <div
+        ref={treeContainerRef}
+        className="absolute top-[150px] left-0 w-full h-[calc(100%-150px)]"
+      >
+        {/* Tree graph rendered here */}
+      </div>
+  
+      {/* Hidden Audio Element */}
+      <audio ref={audioRef} style={{ display: "none" }} />
     </div>
   );
+  
 }
