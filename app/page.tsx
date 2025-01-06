@@ -1,15 +1,15 @@
-"use client"
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import Soundfont from "soundfont-player";
 
-const measureDuration = 1000; // Default duration for a measure
 const traversalMeasures = {
   inorder: [],
   preorder: [],
   postorder: [],
   levelorder: [
-    { pitches: [{ note: "C3", duration: 200 }, { note: "E3", duration: 200 }, { note: "G3", duration: 200 }] },
+    { pitches: [{ note: "C3", duration: 200 },{ note: "B3", duration: 200 },{ note: "G3", duration: 200 },{ note: "F3", duration: 200 }] },
     { pitches: [{ note: "F3", duration: 800 }] },
     { pitches: [{ note: "B3", duration: 200 }] },
   ],
@@ -38,69 +38,79 @@ function buildTree(levelOrder: Measure[]): TreeNode | null {
 }
 
 // Recursive traversal functions
-function populateInorder(node: TreeNode | null, result: Measure[]) {
+function populateInorder(node: TreeNode | null, measures: Measure[], nodeIds: number[], nodeId = 0) {
   if (!node) return;
-  populateInorder(node.left, result);
-  result.push(node.measure);
-  populateInorder(node.right, result);
+  populateInorder(node.left, measures, nodeIds, 2 * nodeId + 1);
+  measures.push(node.measure);
+  nodeIds.push(nodeId);
+  populateInorder(node.right, measures, nodeIds, 2 * nodeId + 2);
 }
 
-interface TreeNode {
-  measure: Measure;
-  left: TreeNode | null;
-  right: TreeNode | null;
-}
-
-interface Measure {
-  pitches: { note: string; duration: number }[];
-}
-
-function populatePreorder(node: TreeNode | null, result: Measure[]) {
+function populatePreorder(node: TreeNode | null, measures: Measure[], nodeIds: number[], nodeId = 0) {
   if (!node) return;
-  result.push(node.measure);
-  populatePreorder(node.left, result);
-  populatePreorder(node.right, result);
+  measures.push(node.measure);
+  nodeIds.push(nodeId);
+  populatePreorder(node.left, measures, nodeIds, 2 * nodeId + 1);
+  populatePreorder(node.right, measures, nodeIds, 2 * nodeId + 2);
 }
 
-interface TreeNode {
-  measure: Measure;
-  left: TreeNode | null;
-  right: TreeNode | null;
-}
-
-interface Measure {
-  pitches: { note: string; duration: number }[];
-}
-
-function populatePostorder(node: TreeNode | null, result: Measure[]) {
+function populatePostorder(node: TreeNode | null, measures: Measure[], nodeIds: number[], nodeId = 0) {
   if (!node) return;
-  populatePostorder(node.left, result);
-  populatePostorder(node.right, result);
-  result.push(node.measure);
+  populatePostorder(node.left, measures, nodeIds, 2 * nodeId + 1);
+  populatePostorder(node.right, measures, nodeIds, 2 * nodeId + 2);
+  measures.push(node.measure);
+  nodeIds.push(nodeId);
+}
+function populateLevelorderNodeIds(root: TreeNode | null, nodeIds: number[]) {
+  if (!root) return;
+  const queue: { node: TreeNode; id: number }[] = [{ node: root, id: 0 }];
+  let index = 0;
+
+  while (queue.length > 0) {
+    const { node, id } = queue.shift()!;
+    if (index < traversalMeasures.levelorder.length) {
+      nodeIds.push(id); // Push node ID corresponding to level order measure
+      index++;
+    }
+    if (node.left) queue.push({ node: node.left, id: 2 * id + 1 });
+    if (node.right) queue.push({ node: node.right, id: 2 * id + 2 });
+  }
 }
 
 // Build the tree from level order
 const root = buildTree(traversalMeasures.levelorder);
-
+const traversalNodeIds = {
+  inorder: [] as number[],
+  preorder: [] as number[],
+  postorder: [] as number[],
+  levelorder: [] as number[], // Populated dynamically
+};
 // Populate traversals
-populateInorder(root, traversalMeasures.inorder);
-populatePreorder(root, traversalMeasures.preorder);
-populatePostorder(root, traversalMeasures.postorder);
+// Populate traversal measures and node IDs
+populateInorder(root, traversalMeasures.inorder, traversalNodeIds.inorder);
+populatePreorder(root, traversalMeasures.preorder, traversalNodeIds.preorder);
+populatePostorder(root, traversalMeasures.postorder, traversalNodeIds.postorder);
 
-console.log("Inorder:", traversalMeasures.inorder);
-console.log("Preorder:", traversalMeasures.preorder);
-console.log("Postorder:", traversalMeasures.postorder);
+// Populate levelorder node IDs dynamically
+populateLevelorderNodeIds(root, traversalNodeIds.levelorder);
 
 
 export default function Home() {
   const [activeTraversals, setActiveTraversals] = useState({
     preorder: true,
-    inorder: true,
-    postorder: true,
-    levelorder: true,
+    inorder: false,
+    postorder: false,
+    levelorder: false,
   });
-
+  const [debugMode, setDebugMode] = useState(false);
   const treeContainerRef = useRef<HTMLDivElement>(null);
+
+  const colorMap = {
+    preorder: "rgba(255, 0, 0, 0.5)",
+    inorder: "rgba(0, 255, 0, 0.5)",
+    postorder: "rgba(0, 0, 255, 0.5)",
+    levelorder: "rgba(255, 255, 0, 0.5)",
+  };
 
   const toggleTraversal = (order: keyof typeof activeTraversals) => {
     setActiveTraversals((prev) => ({
@@ -118,71 +128,168 @@ export default function Home() {
     // Get active measures
     const activeMeasures = Object.keys(activeTraversals)
       .filter((order) => activeTraversals[order as keyof typeof activeTraversals])
-      .map((order) => traversalMeasures[order as keyof typeof traversalMeasures]);
+      .map((order) => ({
+        measures: traversalMeasures[order as keyof typeof traversalMeasures],
+        traversalOrder: order,
+      }));
 
-    // Play all active measures simultaneously
-    playActiveMeasuresSimultaneously(activeMeasures, instrument);
-  };
-
-  const playActiveMeasuresSimultaneously = (
-    activeMeasures: { pitches: { note: string; duration: number }[] }[][],
-    instrument: any
-  ) => {
-    activeMeasures.forEach((measures) => {
-      playTraversalMeasures(measures, instrument);
+    // Play all active measures sequentially
+    activeMeasures.forEach(({ measures, traversalOrder }) => {
+      playTraversalMeasures(measures, instrument, traversalOrder);
     });
   };
 
   const playTraversalMeasures = (
     measures: { pitches: { note: string; duration: number }[] }[],
-    instrument: any
+    instrument: any,
+    traversalOrder: string
   ) => {
-    let currentTime = instrument.context.currentTime;
-
-    measures.forEach((measure) => {
-      playMeasure(measure, instrument, currentTime);
-      // Move the time forward by the measure duration
-      currentTime += measure.pitches.reduce((sum, pitch) => sum + pitch.duration / 1000, 0);
+    let currentTime = instrument.context.currentTime; // Start time for the traversal
+  
+    measures.forEach((measure, index) => {
+      const measureDuration = measure.pitches.reduce((sum, pitch) => sum + pitch.duration / 1000, 0);
+  
+      // Get the node index specific to this traversal order
+      const nodeId = getTraversalNodeId(index, traversalOrder);
+  
+      // Schedule playback and node highlighting
+      setTimeout(() => {
+        highlightNode(nodeId, traversalOrder); // Highlight the node
+        playMeasure(measure, instrument); // Play the measure
+      }, (currentTime - instrument.context.currentTime) * 1000);
+  
+      // Schedule reset of the node color
+      setTimeout(() => {
+        resetNodeColor(nodeId, traversalOrder); // Pass traversal order to reset
+      }, (currentTime - instrument.context.currentTime + measureDuration) * 1000);
+  
+      // Increment currentTime for the next measure
+      currentTime += measureDuration; // Advance the currentTime for the next measure
     });
   };
+  
+  
+  
+  const getTraversalNodeId = (index: number, traversalOrder: string): number => {
+  switch (traversalOrder) {
+    case "preorder":
+      return traversalNodeIds.preorder[index];
+    case "inorder":
+      return traversalNodeIds.inorder[index];
+    case "postorder":
+      return traversalNodeIds.postorder[index];
+    case "levelorder":
+    default:
+      return traversalNodeIds.levelorder[index];
+  }
+};
+
+  
+  
+  
 
   const playMeasure = (
     measure: { pitches: { note: string; duration: number }[] },
-    instrument: any,
-    startTime: number
+    instrument: any
   ) => {
     let offset = 0; // Time offset within the measure
     measure.pitches.forEach((pitch) => {
-      playPitch(pitch, instrument, startTime + offset);
+      instrument.play(pitch.note, instrument.context.currentTime + offset, { duration: pitch.duration / 1000 });
       offset += pitch.duration / 1000; // Increment the offset by the pitch duration
     });
   };
+  
+  const activeTraversalsPerNode: { [nodeId: number]: string[] } = {};
 
-  const playPitch = (pitch: { note: string; duration: number }, instrument: any, startTime: number) => {
-    console.log(`Playing ${pitch.note} for ${pitch.duration / 1000}s at ${startTime}s`);
-    instrument.play(pitch.note, startTime, { duration: pitch.duration / 1000 });
+  const highlightNode = (nodeId: number, traversalOrder: string) => {
+    // Add the traversal order to the active list for the node
+    if (!activeTraversalsPerNode[nodeId]) {
+      activeTraversalsPerNode[nodeId] = [];
+    }
+    if (!activeTraversalsPerNode[nodeId].includes(traversalOrder)) {
+      activeTraversalsPerNode[nodeId].push(traversalOrder);
+    }
+  
+    // Recalculate the blended color
+    const blendedColor = activeTraversalsPerNode[nodeId]
+      .map((order) => colorMap[order as keyof typeof colorMap])
+      .reduce((acc, color) => blendColors(acc, color)); // Blend all active traversal colors
+  
+    // Apply the new color
+    const node = d3.select(`#node-${nodeId}`);
+    node.transition().duration(200).style("fill", blendedColor);
+  };
+  
+  
+  
+  const resetNodeColor = (nodeId: number, traversalOrder: string) => {
+    // Remove the traversal order from the active list for the node
+    if (activeTraversalsPerNode[nodeId]) {
+      activeTraversalsPerNode[nodeId] = activeTraversalsPerNode[nodeId].filter(
+        (order) => order !== traversalOrder
+      );
+    }
+  
+    // Recalculate the blended color or reset to white
+    const node = d3.select(`#node-${nodeId}`);
+    if (activeTraversalsPerNode[nodeId] && activeTraversalsPerNode[nodeId].length > 0) {
+      const blendedColor = activeTraversalsPerNode[nodeId]
+        .map((order) => colorMap[order as keyof typeof colorMap])
+        .reduce((acc, color) => blendColors(acc, color)); // Blend remaining active traversal colors
+      node.transition().duration(200).style("fill", blendedColor);
+    } else {
+      node.transition().duration(200).style("fill", "white"); // Reset to white if no active traversals
+    }
+  };
+  
+  
+  
+  
+  
+  const blendColors = (color1: string, color2: string) => {
+    const rgba1 = parseRGBA(color1);
+    const rgba2 = parseRGBA(color2);
+
+    return `rgba(${Math.round((rgba1.r + rgba2.r) / 2)}, ${Math.round(
+      (rgba1.g + rgba2.g) / 2
+    )}, ${Math.round((rgba1.b + rgba2.b) / 2)}, ${Math.min(1, (rgba1.a + rgba2.a) / 2)})`;
+  };
+
+  const parseRGBA = (rgbaString: string) => {
+    const match = rgbaString.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+),?\s*([\d.]*)\)$/);
+    return match
+      ? {
+          r: parseInt(match[1], 10),
+          g: parseInt(match[2], 10),
+          b: parseInt(match[3], 10),
+          a: parseFloat(match[4]) || 1,
+        }
+      : { r: 255, g: 255, b: 255, a: 1 }; // Default to white if parsing fails
   };
   
 
   useEffect(() => {
     if (!treeContainerRef.current) return;
-  
-    // Convert the TreeNode structure into a D3-friendly format
-    function treeNodeToD3(node: TreeNode | null): { name: string; children: any[] } | null {
+
+    function treeNodeToD3(node: TreeNode | null, id = 0): { name: string; id: number; children?: any[] } | null {
       if (!node) return null;
       return {
         name: node.measure.pitches
           .map((pitch) => `${pitch.note} (${pitch.duration}ms)`)
           .join(", "),
-        children: [treeNodeToD3(node.left), treeNodeToD3(node.right)].filter(Boolean),
+        id,
+        children: [
+          treeNodeToD3(node.left, 2 * id + 1),
+          treeNodeToD3(node.right, 2 * id + 2),
+        ].filter(Boolean),
       };
     }
-  
+
     const treeData = treeNodeToD3(root);
-  
+
     const width = window.innerWidth;
     const height = window.innerHeight - 150;
-  
+
     const svg = d3
       .select(treeContainerRef.current)
       .append("svg")
@@ -190,15 +297,14 @@ export default function Home() {
       .attr("height", height)
       .append("g")
       .attr("transform", "translate(50,50)");
-  
+
     const treeLayout = d3.tree().size([width - 100, height - 100]);
-  
+
     if (!treeData) return;
-    const rootNode = d3.hierarchy<{ name: string; children: any[] }>(treeData);
-    // @ts-ignore
+    const rootNode = d3.hierarchy(treeData);
+    // @ts-expect-error
     treeLayout(rootNode);
-  
-    // Render links
+
     svg
       .selectAll(".link")
       .data(rootNode.links())
@@ -211,8 +317,7 @@ export default function Home() {
       .attr("y2", (d) => d.target.y ?? 0)
       .style("stroke", "#ccc")
       .style("stroke-width", 2);
-  
-    // Render nodes
+
     const nodes = svg
       .selectAll(".node")
       .data(rootNode.descendants())
@@ -220,75 +325,72 @@ export default function Home() {
       .append("g")
       .attr("class", "node")
       .attr("transform", (d) => `translate(${d.x},${d.y})`);
-  
+
     nodes
       .append("circle")
-      .attr("r", 10)
+      .attr("r", 30)
+      .attr("id", (d) => `node-${d.data.id}`)
       .style("fill", "white")
       .style("stroke", "black");
-  
+
     nodes
       .append("text")
       .attr("dy", -15)
       .attr("text-anchor", "middle")
+      .attr("class", "node-text") // Add class for text
+      .style("display", debugMode ? "block" : "none") // Show or hide based on debugMode
       .text((d) => d.data.name);
-  }, []);
-  
+      d3.selectAll(".node-text").style("display", debugMode ? "block" : "none");
 
-return (
-<div className="absolute top-0 left-0 w-full h-full bg-gray-100">
-<div className="absolute top-4 left-0 w-full flex flex-col items-center gap-2">
-  <h1 className="text-2xl font-bold text-black">16 Viola Pieces on Tree Traversal :P</h1>
-  <div className="flex gap-4">
-    <label className="flex items-center gap-2">
+  }, [debugMode]);
+
+  return (
+    <div className="absolute top-0 left-0 w-full h-full bg-gray-100">
+      <div className="absolute top-4 left-0 w-full flex flex-col items-center gap-2">
+        <h1 className="text-2xl font-bold text-black">16 Viola Pieces on Tree Traversal :P</h1>
+        <div className="absolute top-4 left-4 flex items-center gap-2">
+  <label className="flex items-center gap-2">
+    <input
+      type="checkbox"
+      checked={debugMode}
+      onChange={(e) => setDebugMode(e.target.checked)}
+      className="w-6 h-6 rounded cursor-pointer"
+    />
+    <span className="text-black font-bold">Debug Mode</span>
+  </label>
+</div>
+        <div className="flex gap-4">
+  {["preorder", "inorder", "postorder", "levelorder"].map((order) => (
+    <label key={order} className="flex items-center gap-2">
       <input
         type="checkbox"
-        checked={activeTraversals.preorder}
-        onChange={() => toggleTraversal("preorder")}
-        className="accent-red-500"
+        checked={activeTraversals[order as keyof typeof activeTraversals]}
+        onChange={() => toggleTraversal(order as keyof typeof activeTraversals)}
+        style={{
+          accentColor: colorMap[order as keyof typeof colorMap], // Set the checkbox color dynamically
+        }}
+        className="w-8 h-8 rounded cursor-pointer"
       />
-      <span style={{ color: "red" }}>Preorder</span>
+      <span className="text-gray-100 font-bold">
+        {order.charAt(0).toUpperCase() + order.slice(1)}
+      </span>
     </label>
-    <label className="flex items-center gap-2">
-      <input
-        type="checkbox"
-        checked={activeTraversals.inorder}
-        onChange={() => toggleTraversal("inorder")}
-        className="accent-green-500"
-      />
-      <span style={{ color: "green" }}>Inorder</span>
-    </label>
-    <label className="flex items-center gap-2">
-      <input
-        type="checkbox"
-        checked={activeTraversals.postorder}
-        onChange={() => toggleTraversal("postorder")}
-        className="accent-blue-500"
-      />
-      <span style={{ color: "blue" }}>Postorder</span>
-    </label>
-    <label className="flex items-center gap-2">
-      <input
-        type="checkbox"
-        checked={activeTraversals.levelorder}
-        onChange={() => toggleTraversal("levelorder")}
-        className="accent-yellow-500"
-      />
-      <span style={{ color: "yellow" }}>Level Order</span>
-    </label>
-  </div>
-  <button
-    onClick={handlePlay}
-    className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600"
-  >
-    Play Music
-  </button>
+  ))}
 </div>
 
-{/* Tree Graph */}
-<div ref={treeContainerRef} className="absolute top-[150px] left-0 w-full h-[calc(100%-150px)]">
-  {/* D3 tree visualization is rendered here */}
-</div>
-</div>
-);
+
+
+        <button
+          onClick={handlePlay}
+          className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600"
+        >
+          Play Music
+        </button>
+      </div>
+
+      <div ref={treeContainerRef} className="absolute top-[150px] left-0 w-full h-[calc(100%-150px)]">
+        {/* D3 tree visualization is rendered here */}
+      </div>
+    </div>
+  );
 }
