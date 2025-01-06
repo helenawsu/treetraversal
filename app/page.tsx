@@ -141,28 +141,28 @@ export default function Home() {
 
   const playTraversalMeasures = (
     measures: { pitches: { note: string; duration: number }[] }[],
-    instrument: any,
+    instrument: any, // eslint-disable-line @typescript-eslint/no-explicit-any
     traversalOrder: string
   ) => {
     let currentTime = instrument.context.currentTime; // Start time for the traversal
-  
+
     measures.forEach((measure, index) => {
       const measureDuration = measure.pitches.reduce((sum, pitch) => sum + pitch.duration / 1000, 0);
-  
+
       // Get the node index specific to this traversal order
       const nodeId = getTraversalNodeId(index, traversalOrder);
-  
+
       // Schedule playback and node highlighting
       setTimeout(() => {
         highlightNode(nodeId, traversalOrder); // Highlight the node
         playMeasure(measure, instrument); // Play the measure
       }, (currentTime - instrument.context.currentTime) * 1000);
-  
+
       // Schedule reset of the node color
       setTimeout(() => {
         resetNodeColor(nodeId, traversalOrder); // Pass traversal order to reset
       }, (currentTime - instrument.context.currentTime + measureDuration) * 1000);
-  
+
       // Increment currentTime for the next measure
       currentTime += measureDuration; // Advance the currentTime for the next measure
     });
@@ -190,7 +190,7 @@ export default function Home() {
 
   const playMeasure = (
     measure: { pitches: { note: string; duration: number }[] },
-    instrument: any
+    instrument: any // eslint-disable-line @typescript-eslint/no-explicit-any
   ) => {
     let offset = 0; // Time offset within the measure
     measure.pitches.forEach((pitch) => {
@@ -271,7 +271,7 @@ export default function Home() {
   useEffect(() => {
     if (!treeContainerRef.current) return;
 
-    function treeNodeToD3(node: TreeNode | null, id = 0): { name: string; id: number; children?: any[] } | null {
+    function treeNodeToD3(node: TreeNode | null, id = 0): { name: string; id: number; children?: any[] } | null { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (!node) return null;
       return {
         name: node.measure.pitches
@@ -302,7 +302,7 @@ export default function Home() {
 
     if (!treeData) return;
     const rootNode = d3.hierarchy(treeData);
-    // @ts-expect-error
+    // @ts-expect-error: lazy to fix
     treeLayout(rootNode);
 
     svg
@@ -356,7 +356,7 @@ export default function Home() {
       onChange={(e) => setDebugMode(e.target.checked)}
       className="w-6 h-6 rounded cursor-pointer"
     />
-    <span className="text-black font-bold">Debug Mode</span>
+    <span className="text-black font-bold">唠叨模式</span>
   </label>
 </div>
         <div className="flex gap-4">
