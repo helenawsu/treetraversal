@@ -134,7 +134,6 @@ export default function Home() {
   });
   const [debugMode, setDebugMode] = useState(false);
   const treeContainerRef = useRef<HTMLDivElement>(null);
-  const instrumentRef = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
 
   const colorMap = {
     preorder: "rgba(255, 0, 0, 0.5)",
