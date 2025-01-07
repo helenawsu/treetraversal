@@ -3,44 +3,45 @@
 import { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import Soundfont from "soundfont-player";
-
+const tempo = 60;
+const multiplier = 60 / tempo * 1000;
+// 1 should be quarter notes, should be 1000ms in tempo 60
 const traversalMeasures = {
   inorder: [],
   preorder: [],
   postorder: [],
   levelorder: [
-    { pitches: [{ note: "C3", duration: 800 }] },
-    { pitches: [{ note: "D3", duration: 800 }] },
-    { pitches: [{ note: "E3", duration: 800 }] },
-    { pitches: [{ note: "F3", duration: 800 }] },
-    { pitches: [{ note: "G3", duration: 800 }] },
-    { pitches: [{ note: "A3", duration: 800 }] },
-    { pitches: [{ note: "B3", duration: 800 }] },
-    { pitches: [{ note: "C4", duration: 800 }] },
-    { pitches: [{ note: "D4", duration: 800 }] },
-    { pitches: [{ note: "E4", duration: 800 }] },
-    { pitches: [{ note: "F4", duration: 800 }] },
-    { pitches: [{ note: "G4", duration: 800 }] },
-    { pitches: [{ note: "A4", duration: 800 }] },
-    { pitches: [{ note: "B4", duration: 800 }] },
-    { pitches: [{ note: "C5", duration: 800 }] },
-    { pitches: [{ note: "C3", duration: 800 }] },
-    { pitches: [{ note: "D3", duration: 800 }] },
-    { pitches: [{ note: "E3", duration: 800 }] },
-    { pitches: [{ note: "F3", duration: 800 }] },
-    { pitches: [{ note: "G3", duration: 800 }] },
-    { pitches: [{ note: "A3", duration: 800 }] },
-    { pitches: [{ note: "B3", duration: 800 }] },
-    { pitches: [{ note: "C4", duration: 800 }] },
-    { pitches: [{ note: "D4", duration: 800 }] },
-    { pitches: [{ note: "E4", duration: 800 }] },
-    { pitches: [{ note: "F4", duration: 800 }] },
-    { pitches: [{ note: "G4", duration: 800 }] },
-    { pitches: [{ note: "A4", duration: 800 }] },
-    { pitches: [{ note: "B4", duration: 800 }] },
-    { pitches: [{ note: "C5", duration: 800 }] },
-    { pitches: [{ note: "G4", duration: 800 }] },
-
+    { pitches: [{ note: "C3", duration: 1 }] },
+    { pitches: [{ note: "D3", duration: 1 }] },
+    { pitches: [{ note: "E3", duration: 1 }] },
+    { pitches: [{ note: "F3", duration: 1 }] },
+    { pitches: [{ note: "G3", duration: 1 }] },
+    { pitches: [{ note: "A3", duration: 1 }] },
+    { pitches: [{ note: "B3", duration: 1 }] },
+    { pitches: [{ note: "C4", duration: 1 }] },
+    { pitches: [{ note: "D4", duration: 1 }] },
+    { pitches: [{ note: "E4", duration: 1 }] },
+    { pitches: [{ note: "F4", duration: 1 }] },
+    { pitches: [{ note: "G4", duration: 1 }] },
+    { pitches: [{ note: "A4", duration: 1 }] },
+    { pitches: [{ note: "B4", duration: 1 }] },
+    { pitches: [{ note: "C5", duration: 1 }] },
+    { pitches: [{ note: "C3", duration: 1 }] },
+    { pitches: [{ note: "D3", duration: 1 }] },
+    { pitches: [{ note: "E3", duration: 1 }] },
+    { pitches: [{ note: "F3", duration: 1 }] },
+    { pitches: [{ note: "G3", duration: 1 }] },
+    { pitches: [{ note: "A3", duration: 1 }] },
+    { pitches: [{ note: "B3", duration: 1 }] },
+    { pitches: [{ note: "C4", duration: 1 }] },
+    { pitches: [{ note: "D4", duration: 1 }] },
+    { pitches: [{ note: "E4", duration: 1 }] },
+    { pitches: [{ note: "F4", duration: 1 }] },
+    { pitches: [{ note: "G4", duration: 1 }] },
+    { pitches: [{ note: "A4", duration: 1 }] },
+    { pitches: [{ note: "B4", duration: 1 }] },
+    { pitches: [{ note: "C5", duration: 1 }] },
+    { pitches: [{ note: "G4", duration: 1 }] },
   ],
 };
 
@@ -133,6 +134,7 @@ export default function Home() {
   });
   const [debugMode, setDebugMode] = useState(false);
   const treeContainerRef = useRef<HTMLDivElement>(null);
+  const instrumentRef = useRef<any>(null); // eslint-disable-line @typescript-eslint/no-explicit-any
 
   const colorMap = {
     preorder: "rgba(255, 0, 0, 0.5)",
@@ -148,6 +150,8 @@ export default function Home() {
     }));
   };
 
+
+  
   const handlePlay = async () => {
     const audioContext = new (window.AudioContext || window.AudioContext)();
 
@@ -176,7 +180,7 @@ export default function Home() {
     let currentTime = instrument.context.currentTime; // Start time for the traversal
 
     measures.forEach((measure, index) => {
-      const measureDuration = measure.pitches.reduce((sum, pitch) => sum + pitch.duration / 1000, 0);
+      const measureDuration = measure.pitches.reduce((sum, pitch) => sum + pitch.duration * multiplier / 1000, 0);
 
       // Get the node index specific to this traversal order
       const nodeId = getTraversalNodeId(index, traversalOrder);
@@ -223,8 +227,8 @@ export default function Home() {
   ) => {
     let offset = 0; // Time offset within the measure
     measure.pitches.forEach((pitch) => {
-      instrument.play(pitch.note, instrument.context.currentTime + offset, { duration: pitch.duration / 1000 });
-      offset += pitch.duration / 1000; // Increment the offset by the pitch duration
+      instrument.play(pitch.note, instrument.context.currentTime + offset, { duration: pitch.duration * multiplier / 1000 });
+      offset += pitch.duration * multiplier / 1000; // Increment the offset by the pitch duration
     });
   };
   
@@ -304,7 +308,7 @@ export default function Home() {
       if (!node) return null;
       return {
         name: node.measure.pitches
-          .map((pitch) => `${pitch.note} (${pitch.duration}ms)`)
+          .map((pitch) => `${pitch.note} (${pitch.duration * multiplier}ms)`)
           .join(", "),
         id,
         children: [
@@ -372,7 +376,11 @@ export default function Home() {
       d3.selectAll(".node-text").style("display", debugMode ? "block" : "none");
 
   }, [debugMode]);
-
+  const handleClear = () => {
+    // Force a page reload to reset everything
+    window.location.reload();
+  };
+  
   return (
     <div className="absolute top-0 left-0 w-full h-full bg-gray-100">
       <div className="absolute top-4 left-0 w-full flex flex-col items-center gap-2">
@@ -415,13 +423,20 @@ export default function Home() {
 </div>
 
 
-
+<div className="flex gap-4">
         <button
           onClick={handlePlay}
-          className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600"
+          className="mt-4 px-6 py-2 bg-gray-500 text-white rounded-lg shadow hover:bg-gray-600"
         >
           Play Music
         </button>
+        <button
+          onClick={handleClear}
+          className="mt-4 px-6 py-2 bg-gray-500 text-white rounded-lg shadow hover:bg-gray-600"
+        >
+          Clear
+        </button>
+        </div>
       </div>
 
       <div ref={treeContainerRef} className="absolute top-[150px] left-0 w-full h-[calc(100%-150px)]">
