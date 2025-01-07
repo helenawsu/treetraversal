@@ -9,9 +9,38 @@ const traversalMeasures = {
   preorder: [],
   postorder: [],
   levelorder: [
-    { pitches: [{ note: "C3", duration: 200 },{ note: "B3", duration: 200 },{ note: "G3", duration: 200 },{ note: "F3", duration: 200 }] },
+    { pitches: [{ note: "C3", duration: 800 }] },
+    { pitches: [{ note: "D3", duration: 800 }] },
+    { pitches: [{ note: "E3", duration: 800 }] },
     { pitches: [{ note: "F3", duration: 800 }] },
-    { pitches: [{ note: "B3", duration: 200 }] },
+    { pitches: [{ note: "G3", duration: 800 }] },
+    { pitches: [{ note: "A3", duration: 800 }] },
+    { pitches: [{ note: "B3", duration: 800 }] },
+    { pitches: [{ note: "C4", duration: 800 }] },
+    { pitches: [{ note: "D4", duration: 800 }] },
+    { pitches: [{ note: "E4", duration: 800 }] },
+    { pitches: [{ note: "F4", duration: 800 }] },
+    { pitches: [{ note: "G4", duration: 800 }] },
+    { pitches: [{ note: "A4", duration: 800 }] },
+    { pitches: [{ note: "B4", duration: 800 }] },
+    { pitches: [{ note: "C5", duration: 800 }] },
+    { pitches: [{ note: "C3", duration: 800 }] },
+    { pitches: [{ note: "D3", duration: 800 }] },
+    { pitches: [{ note: "E3", duration: 800 }] },
+    { pitches: [{ note: "F3", duration: 800 }] },
+    { pitches: [{ note: "G3", duration: 800 }] },
+    { pitches: [{ note: "A3", duration: 800 }] },
+    { pitches: [{ note: "B3", duration: 800 }] },
+    { pitches: [{ note: "C4", duration: 800 }] },
+    { pitches: [{ note: "D4", duration: 800 }] },
+    { pitches: [{ note: "E4", duration: 800 }] },
+    { pitches: [{ note: "F4", duration: 800 }] },
+    { pitches: [{ note: "G4", duration: 800 }] },
+    { pitches: [{ note: "A4", duration: 800 }] },
+    { pitches: [{ note: "B4", duration: 800 }] },
+    { pitches: [{ note: "C5", duration: 800 }] },
+    { pitches: [{ note: "G4", duration: 800 }] },
+
   ],
 };
 
@@ -371,9 +400,16 @@ export default function Home() {
         }}
         className="w-8 h-8 rounded cursor-pointer"
       />
-      <span className="text-gray-100 font-bold">
-        {order.charAt(0).toUpperCase() + order.slice(1)}
-      </span>
+      {debugMode && ( // Only render the label text when debugMode is true
+        <span
+        className="font-bold"
+        style={{
+          color: colorMap[order as keyof typeof colorMap], // Set text color to match the order's color
+        }}
+      >
+          {order.charAt(0).toUpperCase() + order.slice(1)}
+        </span>
+      )}
     </label>
   ))}
 </div>
