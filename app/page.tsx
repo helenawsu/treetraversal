@@ -11,10 +11,12 @@ const traversalMeasures = {
   preorder: [],
   postorder: [],
   levelorder: [
-    { pitches: [{ note: "C3", duration: 1 }] },
-    { pitches: [{ note: "D3", duration: 1 }] },
-    { pitches: [{ note: "E3", duration: 1 }] },
-    { pitches: [{ note: "F3", duration: 1 }] },
+    {  pitches: [
+      { note: "C3", duration: 4 }, 
+    ], },
+    { pitches: [{ note: "E3", duration: 2 }, { note: "G#3", duration: 2 }] },
+    { pitches: [{ note: "G3", duration: 2 }, { note: "Eb3", duration: 2 }] },
+    { pitches: [{ note: "F3", duration: 1 }, { note: "F#3", duration: 1 }, { note: "F3", duration: 1 }, { note: "Eb3", duration: 1 }] },
     { pitches: [{ note: "G3", duration: 1 }] },
     { pitches: [{ note: "A3", duration: 1 }] },
     { pitches: [{ note: "B3", duration: 1 }] },
@@ -127,10 +129,10 @@ populateLevelorderNodeIds(root, traversalNodeIds.levelorder);
 
 export default function Home() {
   const [activeTraversals, setActiveTraversals] = useState({
-    preorder: true,
+    preorder: false,
     inorder: false,
     postorder: false,
-    levelorder: false,
+    levelorder: true,
   });
   const [debugMode, setDebugMode] = useState(false);
   const treeContainerRef = useRef<HTMLDivElement>(null);
@@ -221,13 +223,23 @@ export default function Home() {
   
 
   const playMeasure = (
-    measure: { pitches: { note: string; duration: number }[] },
+    measure: { pitches: { note: string | "rest"; duration: number }[] },
     instrument: any // eslint-disable-line @typescript-eslint/no-explicit-any
   ) => {
     let offset = 0; // Time offset within the measure
     measure.pitches.forEach((pitch) => {
-      instrument.play(pitch.note, instrument.context.currentTime + offset, { duration: pitch.duration * multiplier / 1000 });
-      offset += pitch.duration * multiplier / 1000; // Increment the offset by the pitch duration
+      if (pitch.note === "rest") {
+        // Skip playing a note and just wait for the duration
+        offset += pitch.duration * multiplier / 1000;
+      } else {
+        // Play the pitch
+        instrument.play(
+          pitch.note,
+          instrument.context.currentTime + offset,
+          { duration: pitch.duration * multiplier / 1000 }
+        );
+        offset += pitch.duration * multiplier / 1000; // Increment the offset by the pitch duration
+      }
     });
   };
   
