@@ -44,13 +44,12 @@ const traversalMeasures = {
     { pitches: [{ note: "B4", duration: 1 }] },
     { pitches: [{ note: "C5", duration: 1 }] },
     { pitches: [{ note: "G4", duration: 1 }] },
-  ],
-};
+  ]};
 
 // Helper function to build tree nodes
 interface Measure {
   pitches: { note: string; duration: number }[];
-}
+};
 
 interface TreeNode {
   measure: Measure;
@@ -150,8 +149,6 @@ export default function Home() {
       [order]: !prev[order],
     }));
   };
-
-
   
   const handlePlay = async () => {
     const audioContext = new (window.AudioContext || window.AudioContext)();
@@ -173,6 +170,8 @@ export default function Home() {
     });
   };
 
+  const scheduledTimeouts: number[] = [];
+
   const playTraversalMeasures = (
     measures: { pitches: { note: string; duration: number }[] }[],
     instrument: any, // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -187,15 +186,17 @@ export default function Home() {
       const nodeId = getTraversalNodeId(index, traversalOrder);
 
       // Schedule playback and node highlighting
-      setTimeout(() => {
+      const highlightTimeout = setTimeout(() => {
         highlightNode(nodeId, traversalOrder); // Highlight the node
         playMeasure(measure, instrument); // Play the measure
       }, (currentTime - instrument.context.currentTime) * 1000);
+      scheduledTimeouts.push(highlightTimeout as unknown as number);
 
       // Schedule reset of the node color
-      setTimeout(() => {
+      const resetTimeout = setTimeout(() => {
         resetNodeColor(nodeId, traversalOrder); // Pass traversal order to reset
       }, (currentTime - instrument.context.currentTime + measureDuration) * 1000);
+      scheduledTimeouts.push(resetTimeout as unknown as number);
 
       // Increment currentTime for the next measure
       currentTime += measureDuration; // Advance the currentTime for the next measure
@@ -217,10 +218,6 @@ export default function Home() {
       return traversalNodeIds.levelorder[index];
   }
 };
-
-  
-  
-  
 
   const playMeasure = (
     measure: { pitches: { note: string | "rest"; duration: number }[] },
@@ -264,8 +261,6 @@ export default function Home() {
     node.transition().duration(200).style("fill", blendedColor);
   };
   
-  
-  
   const resetNodeColor = (nodeId: number, traversalOrder: string) => {
     // Remove the traversal order from the active list for the node
     if (activeTraversalsPerNode[nodeId]) {
@@ -285,10 +280,6 @@ export default function Home() {
       node.transition().duration(200).style("fill", "white"); // Reset to white if no active traversals
     }
   };
-  
-  
-  
-  
   
   const blendColors = (color1: string, color2: string) => {
     const rgba1 = parseRGBA(color1);
@@ -311,6 +302,29 @@ export default function Home() {
       : { r: 255, g: 255, b: 255, a: 1 }; // Default to white if parsing fails
   };
   
+  const handleClear = () => {
+    // Stop all active playing audios
+    const audioContext = new (window.AudioContext || window.AudioContext)();
+    if (audioContext) {
+      audioContext.close().then(() => {
+        console.log("Audio context closed and all active playing audios stopped.");
+      });
+    }
+
+    // Clear all scheduled timeouts
+    scheduledTimeouts.forEach((timeout) => clearTimeout(timeout));
+    scheduledTimeouts.length = 0;
+
+    // Reset node colors
+    d3.selectAll("circle").transition().duration(200).style("fill", "white");
+
+    // Clear active traversals per node
+    Object.keys(activeTraversalsPerNode).forEach((nodeId) => {
+      activeTraversalsPerNode[parseInt(nodeId)] = [];
+    });
+
+    // Reset the state of active traversals
+  };
 
   useEffect(() => {
     if (!treeContainerRef.current) return;
@@ -383,14 +397,7 @@ export default function Home() {
       .attr("text-anchor", "middle")
       .attr("class", "node-text") // Add class for text
       .style("display", debugMode ? "block" : "none") // Show or hide based on debugMode
-      .text((d) => d.data.name);
-      d3.selectAll(".node-text").style("display", debugMode ? "block" : "none");
-
-  }, [debugMode]);
-  const handleClear = () => {
-    // Force a page reload to reset everything
-    window.location.reload();
-  };
+  });
   
   return (
     <div className="absolute top-0 left-0 w-full h-full bg-gray-100">
