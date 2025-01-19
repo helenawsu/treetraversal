@@ -45,7 +45,21 @@ const traversalMeasures = {
     { pitches: [{ note: "C5", duration: 1 }] },
     { pitches: [{ note: "G4", duration: 1 }] },
   ]};
+  let activeAudioSources: AudioBufferSourceNode[] = [];
 
+  // Function to play a note (example)
+  const playNote = (audioContext: AudioContext, buffer: AudioBuffer) => {
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(audioContext.destination);
+    source.start();
+    activeAudioSources.push(source);
+  
+    // Remove the source from the active list when it finishes playing
+    source.onended = () => {
+      activeAudioSources = activeAudioSources.filter(s => s !== source);
+    };
+  };
 // Helper function to build tree nodes
 interface Measure {
   pitches: { note: string; duration: number }[];
@@ -125,6 +139,7 @@ populatePostorder(root, traversalMeasures.postorder, traversalNodeIds.postorder)
 // Populate levelorder node IDs dynamically
 populateLevelorderNodeIds(root, traversalNodeIds.levelorder);
 
+const scheduledTimeouts: number[] = [];
 
 export default function Home() {
   const [activeTraversals, setActiveTraversals] = useState({
@@ -152,7 +167,6 @@ export default function Home() {
   
   const handlePlay = async () => {
     const audioContext = new (window.AudioContext || window.AudioContext)();
-
     // Load viola instrument
     const instrument = await Soundfont.instrument(audioContext, "viola");
 
@@ -170,7 +184,6 @@ export default function Home() {
     });
   };
 
-  const scheduledTimeouts: number[] = [];
 
   const playTraversalMeasures = (
     measures: { pitches: { note: string; duration: number }[] }[],
@@ -197,7 +210,6 @@ export default function Home() {
         resetNodeColor(nodeId, traversalOrder); // Pass traversal order to reset
       }, (currentTime - instrument.context.currentTime + measureDuration) * 1000);
       scheduledTimeouts.push(resetTimeout as unknown as number);
-
       // Increment currentTime for the next measure
       currentTime += measureDuration; // Advance the currentTime for the next measure
     });
@@ -304,26 +316,24 @@ export default function Home() {
   
   const handleClear = () => {
     // Stop all active playing audios
-    const audioContext = new (window.AudioContext || window.AudioContext)();
-    if (audioContext) {
-      audioContext.close().then(() => {
-        console.log("Audio context closed and all active playing audios stopped.");
-      });
-    }
-
+    activeAudioSources.forEach(source => {
+      source.stop();
+    });
+    activeAudioSources = [];
+  
     // Clear all scheduled timeouts
     scheduledTimeouts.forEach((timeout) => clearTimeout(timeout));
     scheduledTimeouts.length = 0;
-
+  
     // Reset node colors
     d3.selectAll("circle").transition().duration(200).style("fill", "white");
-
+  
     // Clear active traversals per node
     Object.keys(activeTraversalsPerNode).forEach((nodeId) => {
       activeTraversalsPerNode[parseInt(nodeId)] = [];
     });
-
-    // Reset the state of active traversals
+  
+    console.log("All active audio sources stopped and scheduled timeouts cleared.");
   };
 
   useEffect(() => {
