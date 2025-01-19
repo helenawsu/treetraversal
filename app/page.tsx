@@ -46,7 +46,8 @@ const traversalMeasures = {
     { pitches: [{ note: "G4", duration: 1 }] },
   ]};
   let activeAudioSources: AudioBufferSourceNode[] = [];
-
+  let audioContext: AudioContext | null = null;
+  
   // Function to play a note (example)
   const playNote = (audioContext: AudioContext, buffer: AudioBuffer) => {
     const source = audioContext.createBufferSource();
@@ -166,10 +167,13 @@ export default function Home() {
   };
   
   const handlePlay = async () => {
-    const audioContext = new (window.AudioContext || window.AudioContext)();
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+  
     // Load viola instrument
     const instrument = await Soundfont.instrument(audioContext, "viola");
-
+  
     // Get active measures
     const activeMeasures = Object.keys(activeTraversals)
       .filter((order) => activeTraversals[order as keyof typeof activeTraversals])
@@ -177,7 +181,7 @@ export default function Home() {
         measures: traversalMeasures[order as keyof typeof traversalMeasures],
         traversalOrder: order,
       }));
-
+  
     // Play all active measures sequentially
     activeMeasures.forEach(({ measures, traversalOrder }) => {
       playTraversalMeasures(measures, instrument, traversalOrder);
@@ -321,6 +325,14 @@ export default function Home() {
     });
     activeAudioSources = [];
   
+    // Close the AudioContext if it exists
+    if (audioContext) {
+      audioContext.close().then(() => {
+        // console.log("Audio context closed and all active playing audios stopped.");
+        audioContext = null; // Reset the audioContext
+      });
+    }
+  
     // Clear all scheduled timeouts
     scheduledTimeouts.forEach((timeout) => clearTimeout(timeout));
     scheduledTimeouts.length = 0;
@@ -333,7 +345,7 @@ export default function Home() {
       activeTraversalsPerNode[parseInt(nodeId)] = [];
     });
   
-    console.log("All active audio sources stopped and scheduled timeouts cleared.");
+    // console.log("All active audio sources stopped and scheduled timeouts cleared.");
   };
 
   useEffect(() => {
