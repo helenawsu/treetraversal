@@ -143,6 +143,7 @@ populateLevelorderNodeIds(root, traversalNodeIds.levelorder);
 const scheduledTimeouts: number[] = [];
 
 export default function Home() {
+  const [mainOrder, setMainOrder] = useState<keyof typeof activeTraversals>("levelorder");
   const [activeTraversals, setActiveTraversals] = useState({
     preorder: false,
     inorder: false,
@@ -151,7 +152,10 @@ export default function Home() {
   });
   const [debugMode, setDebugMode] = useState(false);
   const treeContainerRef = useRef<HTMLDivElement>(null);
-
+  const activeTraversalsRef = useRef(activeTraversals);
+  useEffect(() => {
+    activeTraversalsRef.current = activeTraversals;
+  }, [activeTraversals]);
   const colorMap = {
     preorder: "rgba(255, 0, 0, 0.5)",
     inorder: "rgba(0, 255, 0, 0.5)",
@@ -160,6 +164,7 @@ export default function Home() {
   };
 
   const toggleTraversal = (order: keyof typeof activeTraversals) => {
+    // console.log("toggle", order);
     setActiveTraversals((prev) => ({
       ...prev,
       [order]: !prev[order],
@@ -192,23 +197,26 @@ export default function Home() {
   const playTraversalMeasures = (
     measures: { pitches: { note: string; duration: number }[] }[],
     instrument: any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    traversalOrder: string
+    traversalOrder: string,
+    startIndex: number = 0
   ) => {
     let currentTime = instrument.context.currentTime; // Start time for the traversal
-
-    measures.forEach((measure, index) => {
+    // console.log(traversalOrder);
+    measures.slice(startIndex).forEach((measure, index) => {
       const measureDuration = measure.pitches.reduce((sum, pitch) => sum + pitch.duration * multiplier / 1000, 0);
-
+  
       // Get the node index specific to this traversal order
-      const nodeId = getTraversalNodeId(index, traversalOrder);
-
+      const nodeId = getTraversalNodeId(index + startIndex, traversalOrder);
+  
       // Schedule playback and node highlighting
       const highlightTimeout = setTimeout(() => {
         highlightNode(nodeId, traversalOrder); // Highlight the node
         playMeasure(measure, instrument); // Play the measure
       }, (currentTime - instrument.context.currentTime) * 1000);
       scheduledTimeouts.push(highlightTimeout as unknown as number);
+      // console.log("timeout", scheduledTimeouts);
 
+  
       // Schedule reset of the node color
       const resetTimeout = setTimeout(() => {
         resetNodeColor(nodeId, traversalOrder); // Pass traversal order to reset
@@ -317,7 +325,37 @@ export default function Home() {
         }
       : { r: 255, g: 255, b: 255, a: 1 }; // Default to white if parsing fails
   };
+  const handleNodeClick = (nodeId: number) => {
+    // handleClear();
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
   
+    Soundfont.instrument(audioContext, "viola").then((instrument) => {
+      const startIndex = traversalNodeIds[mainOrder].indexOf(nodeId);
+
+  
+      // Get active measures starting from the clicked node
+      // console.log("hi", activeTraversalsRef.current);
+      const activeMeasures = Object.keys(activeTraversalsRef.current)
+        .filter((order) => activeTraversalsRef.current[order as keyof typeof activeTraversals])
+        .map((order) => {
+          const correspondingNodeId = traversalNodeIds[order as keyof typeof traversalNodeIds][startIndex];
+          const correspondingIndex = traversalNodeIds[order as keyof typeof traversalNodeIds].indexOf(correspondingNodeId);
+          return {
+            measures: traversalMeasures[order as keyof typeof traversalMeasures],
+            traversalOrder: order,
+            startIndex: correspondingIndex,
+          };
+        });
+      
+      // Play all active measures sequentially
+      activeMeasures.forEach(({ measures, traversalOrder, startIndex }) => {
+        playTraversalMeasures(measures, instrument, traversalOrder, startIndex);
+      });
+      // console.log("hiii", scheduledTimeouts);
+    });
+  };
   const handleClear = () => {
     // Stop all active playing audios
     activeAudioSources.forEach(source => {
@@ -347,7 +385,79 @@ export default function Home() {
   
     // console.log("All active audio sources stopped and scheduled timeouts cleared.");
   };
-
+  useEffect(() => {
+    if (!treeContainerRef.current) return;
+  
+    function treeNodeToD3(node: TreeNode | null, id = 0): { name: string; id: number; children?: any[] } | null { // eslint-disable-line @typescript-eslint/no-explicit-any
+      if (!node) return null;
+      return {
+        name: node.measure.pitches
+          .map((pitch) => `${pitch.note} (${pitch.duration * multiplier}ms)`)
+          .join(", "),
+        id,
+        children: [
+          treeNodeToD3(node.left, 2 * id + 1),
+          treeNodeToD3(node.right, 2 * id + 2),
+        ].filter(Boolean),
+      };
+    }
+  
+    const treeData = treeNodeToD3(root);
+  
+    const width = window.innerWidth;
+    const height = window.innerHeight - 150;
+  
+    const svg = d3
+      .select(treeContainerRef.current)
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .append("g")
+      .attr("transform", "translate(50,50)");
+  
+    const treeLayout = d3.tree().size([width - 100, height - 100]);
+  
+    if (!treeData) return;
+    const rootNode = d3.hierarchy(treeData);
+    // @ts-expect-error: lazy to fix
+    treeLayout(rootNode);
+  
+    svg
+      .selectAll(".link")
+      .data(rootNode.links())
+      .enter()
+      .append("line")
+      .attr("class", "link")
+      .attr("x1", (d) => d.source.x ?? 0)
+      .attr("y1", (d) => d.source.y ?? 0)
+      .attr("x2", (d) => d.target.x ?? 0)
+      .attr("y2", (d) => d.target.y ?? 0)
+      .style("stroke", "#ccc")
+      .style("stroke-width", 2);
+  
+    const nodes = svg
+      .selectAll(".node")
+      .data(rootNode.descendants())
+      .enter()
+      .append("g")
+      .attr("class", "node")
+      .attr("transform", (d) => `translate(${d.x},${d.y})`)
+      .on("click", (event, d) => handleNodeClick(d.data.id)); // Add click event listener
+  
+    nodes
+      .append("circle")
+      .attr("r", 30)
+      .attr("id", (d) => `node-${d.data.id}`)
+      .style("fill", "white")
+      .style("stroke", "black");
+  
+    nodes
+      .append("text")
+      .attr("dy", -15)
+      .attr("text-anchor", "middle")
+      .attr("class", "node-text") // Add class for text
+      .style("display", debugMode ? "block" : "none"); // Show or hide based on debugMode
+  }, [debugMode, mainOrder]); // Add mainOrder to the dependency array
   useEffect(() => {
     if (!treeContainerRef.current) return;
 
@@ -434,6 +544,22 @@ export default function Home() {
       className="w-6 h-6 rounded cursor-pointer"
     />
     <span className="text-black font-bold">唠叨模式</span>
+  </label>
+</div>
+<div className="absolute top-4 right-4 flex items-center gap-2">
+  <label className="flex items-center gap-2">
+    <span className="text-black font-bold">Main Order:</span>
+    <select
+      value={mainOrder}
+      onChange={(e) => setMainOrder(e.target.value as keyof typeof activeTraversals)}
+      className="w-32 h-8 rounded cursor-pointer"
+    >
+      {["preorder", "inorder", "postorder", "levelorder"].map((order) => (
+        <option key={order} value={order}>
+          {order.charAt(0).toUpperCase() + order.slice(1)}
+        </option>
+      ))}
+    </select>
   </label>
 </div>
         <div className="flex gap-4">
