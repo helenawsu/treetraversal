@@ -11,39 +11,94 @@ const traversalMeasures = {
   preorder: [],
   postorder: [],
   levelorder: [
-    {  pitches: [
-      { note: "C3", duration: 4 }, 
-    ], },
+    {  pitches: [{ note: "C3", duration: 4 }], },
     { pitches: [{ note: "E3", duration: 2 }, { note: "G#3", duration: 2 }] },
     { pitches: [{ note: "G3", duration: 2 }, { note: "Eb3", duration: 2 }] },
     { pitches: [{ note: "F3", duration: 1 }, { note: "F#3", duration: 1 }, { note: "F3", duration: 1 }, { note: "Eb3", duration: 1 }] },
-    { pitches: [{ note: "G3", duration: 1 }] },
-    { pitches: [{ note: "A3", duration: 1 }] },
-    { pitches: [{ note: "B3", duration: 1 }] },
-    { pitches: [{ note: "C4", duration: 1 }] },
-    { pitches: [{ note: "D4", duration: 1 }] },
-    { pitches: [{ note: "E4", duration: 1 }] },
-    { pitches: [{ note: "F4", duration: 1 }] },
-    { pitches: [{ note: "G4", duration: 1 }] },
-    { pitches: [{ note: "A4", duration: 1 }] },
-    { pitches: [{ note: "B4", duration: 1 }] },
-    { pitches: [{ note: "C5", duration: 1 }] },
-    { pitches: [{ note: "C3", duration: 1 }] },
-    { pitches: [{ note: "D3", duration: 1 }] },
-    { pitches: [{ note: "E3", duration: 1 }] },
-    { pitches: [{ note: "F3", duration: 1 }] },
-    { pitches: [{ note: "G3", duration: 1 }] },
-    { pitches: [{ note: "A3", duration: 1 }] },
-    { pitches: [{ note: "B3", duration: 1 }] },
-    { pitches: [{ note: "C4", duration: 1 }] },
-    { pitches: [{ note: "D4", duration: 1 }] },
-    { pitches: [{ note: "E4", duration: 1 }] },
-    { pitches: [{ note: "F4", duration: 1 }] },
-    { pitches: [{ note: "G4", duration: 1 }] },
-    { pitches: [{ note: "A4", duration: 1 }] },
-    { pitches: [{ note: "B4", duration: 1 }] },
-    { pitches: [{ note: "C5", duration: 1 }] },
-    { pitches: [{ note: "G4", duration: 1 }] },
+    { pitches: [{ note: "C4", duration: 1 }, { note: "C#4", duration: 1 },  { note: "C4", duration: 1},{ note: "Bb3", duration: 1}] },
+    { pitches: [{ note: "Ab3", duration: 1 }, { note: "G3", duration: 1 },  { note: "Bb3", duration: 1},{ note: "Ab3", duration: 1}] },
+    { pitches: [{ note: "G3", duration: 1 }, { note: "Ab3", duration: 1 },  { note: "G3", duration: 1},{ note: "F3", duration: 1}] },
+    { pitches: [{ note: "C4", duration: 0.5 }, { note: "G4", duration: 0.5 },  { note: "F4", duration: 0.5},{ note: "Eb4", duration: 0.5}, 
+                { note: "D4", duration: 0.5 }, { note: "Ab4", duration: 0.5},  { note: "G4", duration: 1}]},
+    { pitches: [{ note: "B3", duration: 0.5 }, { note: "G3", duration: 0.5 },  { note: "Ab3", duration: 0.75},{ note: "Bb3", duration: 0.25}, 
+                { note: "C4", duration: 0.5 }, { note: "C#4", duration: 0.5},  { note: "C4", duration: 0.5},{ note: "Bb3", duration: 0.5}] },
+    { pitches: [{ note: "D#4", duration: 0.5 }, { note: "F#4", duration: 0.5 },  { note: "F4", duration: 0.75},{ note: "F#4", duration: 0.25}, 
+                { note: "Ab4", duration: 0.5 }, { note: "F4", duration: 0.5},  { note: "Bb4", duration: 0.5},{ note: "F4", duration: 0.5}] },
+    { pitches: [{ note: "D#4", duration: 0.5 }, { note: "Ab4", duration: 1 },  { note: "G4", duration: 0.5},{ note: "Ab4", duration: 0.5}, 
+                { note: "Bb4", duration: 0.5 }, { note: "D#4", duration: 0.5},  { note: "D#4", duration: 0.5}] },
+    { pitches: [{ note: "F3", duration: 0.5 }, { note: "A3", duration: 0.5 },  { note: "C4", duration: 0.5},{ note: "F4", duration: 0.5}, 
+                { note: "Eb4", duration: 0.5 }, { note: "C4", duration: 0.5},  { note: "A#3", duration: 0.5}, { note: "A3", duration: 0.5}]  },
+    { pitches: [{ note: "C5", duration: 0.5 }, { note: "Ab4", duration: 0.5 },  { note: "G4", duration: 0.5},{ note: "Ab4", duration: 0.5}, 
+                { note: "F4", duration: 0.5 }, { note: "G4", duration: 0.5},  { note: "Ab4", duration: 0.5}, { note: "Bb4", duration: 0.5}] },
+    { pitches: [{ note: "C#4", duration: 1 }, { note: "C4", duration: 0.5 },  { note: "C#4", duration: 0.5},
+                { note: "F4", duration: 1 }, { note: "Gb4", duration: 0.5},  { note: "F4", duration: 0.5}] },
+    { pitches: [{ note: "D4", duration: 0.5 }, { note: "D#4", duration: 0.5 },  { note: "D4", duration: 0.5},{ note: "Db4", duration: 0.5}, 
+                { note: "C4", duration: 0.5 }, { note: "B3", duration: 0.5},  { note: "Bb3", duration: 0.5}, { note: "B3", duration: 0.5}] },
+    { pitches: [{ note: "C3", duration: 0.25 }, { note: "C#3", duration: 0.25 },  { note: "D#3", duration: 0.25},{ note: "E3", duration: 0.25}, 
+                { note: "D#3", duration: 0.25}, { note: "C#3", duration: 0.25},  { note: "C3", duration: 0.25}, { note: "C#3", duration: 0.25}, 
+                { note: "F3", duration: 0.25 }, { note: "F#3", duration: 0.25 },  { note: "G#3", duration: 0.25},{ note: "A3", duration: 0.25}, 
+                { note: "G#3", duration: 0.25 }, { note: "F#3", duration: 0.25},  { note: "F3", duration: 0.25}, { note: "F#3", duration: 0.25}] },
+    { pitches: [{ note: "A3", duration: 0.25 }, { note: "C4", duration: 0.25 },  { note: "C#4", duration: 0.25},{ note: "C4", duration: 0.25}, 
+                { note: "F4", duration: 0.25}, { note: "F#4", duration: 0.25},  { note: "F4", duration: 0.25}, { note: "C4", duration: 0.25}, 
+                { note: "B3", duration: 0.25 }, { note: "G#3", duration: 0.25 },  { note: "E3", duration: 0.25},{ note: "G#3", duration: 0.25}, 
+                { note: "B3", duration: 0.25 }, { note: "Bb3", duration: 0.25},  { note: "F#3", duration: 0.25}, { note: "F3", duration: 0.25}] },
+    { pitches: [{ note: "Bb3", duration: 0.25 }, { note: "D4", duration: 0.25 },  { note: "F4", duration: 0.25},{ note: "F#4", duration: 0.25}, 
+                { note: "G#4", duration: 0.25}, { note: "A4", duration: 0.25},  { note: "A#4", duration: 0.25}, { note: "B4", duration: 0.25}, 
+                { note: "C#5", duration: 0.25 }, { note: "D#5", duration: 0.25 },  { note: "E5", duration: 0.25},{ note: "D#5", duration: 0.25}, 
+                { note: "C5", duration: 0.25 }, { note: "A#4", duration: 0.25},  { note: "E4", duration: 0.25}, { note: "F4", duration: 0.25}] },
+    { pitches: [{ note: "G4", duration: 0.25 }, { note: "A4", duration: 0.25 },  { note: "A#4", duration: 0.25},{ note: "C5", duration: 0.25}, 
+                { note: "D5", duration: 0.25}, { note: "D5", duration: 0.25},  { note: "F5", duration: 0.25}, { note: "Eb5", duration: 0.25}, 
+                { note: "D5", duration: 0.5 },  { note: "F#5", duration: 0.25},{ note: "D#5", duration: 0.25}, 
+                { note: "Eb5", duration: 0.25 }, { note: "F5", duration: 0.25},  { note: "Eb5", duration: 0.25}, { note: "D5", duration: 0.25}] },
+    { pitches:[{ note: "D4", duration: 0.25 }, { note: "C#4", duration: 0.25 },  { note: "D4", duration: 0.25},{ note: "A3", duration: 0.25}, 
+              { note: "A#3", duration: 0.25}, { note: "C#4", duration: 0.25},  { note: "A3", duration: 0.25}, { note: "A#3", duration: 0.25}, 
+              { note: "G3", duration: 0.33 }, { note: "A3", duration: 0.34 },  { note: "Bb3", duration: 0.33}, 
+              { note: "Eb3", duration: 0.25 }, { note: "Eb3", duration: 0.25},  { note: "D3", duration: 0.25}, { note: "Eb3", duration: 0.25}] },
+    { pitches: [{ note: "Eb4", duration: 0.25 }, { note: "Ab4", duration: 0.25 },  { note: "B4", duration: 0.25},{ note: "Bb4", duration: 0.25}, 
+              { note: "G4", duration: 0.25}, { note: "Ab4", duration: 0.25},  { note: "Ab4", duration: 0.5}, 
+              { note: "G4", duration: 0.25}, { note: "Ab4", duration: 0.25}, { note: "Eb4", duration: 0.25 }, { note: "Bb4", duration: 0.25},
+              { note: "G4", duration: 0.25}, { note: "Ab4", duration: 0.25}, { note: "Eb4", duration: 0.25 }, { note: "C5", duration: 0.25}] },
+    { pitches: [{ note: "D5", duration: 0.25 }, { note: "Eb5", duration: 0.25 },  { note: "D5", duration: 0.25},{ note: "C5", duration: 0.25}, 
+                { note: "Bb4", duration: 0.25}, { note: "Ab4", duration: 0.25},  { note: "G4", duration: 0.25},  { note: "F4", duration: 0.25},
+                { note: "Eb4", duration: 0.75}, { note: "Gb4", duration: 0.25}, { note: "Eb4", duration: 0.5 }, { note: "Ab4", duration: 0.5},
+                ] },
+    { pitches: [{ note: "Eb4", duration: 0.75}, { note: "Bb4", duration: 0.25}, { note: "Eb4", duration: 0.5 }, { note: "B4", duration: 0.5},
+                { note: "B4", duration: 0.25}, { note: "D4", duration: 0.25}, { note: "Eb4", duration: 0.25 }, { note: "D4", duration: 0.25},
+                { note: "Eb4", duration: 0.25}, { note: "F#4", duration: 0.25}, { note: "G4", duration: 0.25 }, { note: "F#4", duration: 0.25},  
+                ] },
+    { pitches: [{ note: "F#4", duration: 0.25 }, { note: "A#4", duration: 0.25 },  { note: "B4", duration: 0.25},{ note: "A#4", duration: 0.25}, 
+                { note: "D#5", duration: 0.25}, { note: "E5", duration: 0.25},  { note: "D#5", duration: 0.25}, { note: "C#5", duration: 0.25}, 
+                { note: "B4", duration: 0.25 }, { note: "C#5", duration: 0.25 },  { note: "A4", duration: 0.25},{ note: "B4", duration: 0.25}, 
+                { note: "G#4", duration: 0.25 }, { note: "A4", duration: 0.25},  { note: "F#4", duration: 0.25}, { note: "G#4", duration: 0.25}] },
+    { pitches: [{ note: "E4", duration: 0.25 }, { note: "F#4", duration: 0.25 },  { note: "D#4", duration: 0.25},{ note: "E4", duration: 0.25}, 
+      { note: "C#4", duration: 0.25}, { note: "C4", duration: 0.25},  { note: "C#4", duration: 0.5}, 
+      { note: "B4", duration: 0.25 }, { note: "C#5", duration: 0.25 },  { note: "A4", duration: 0.25},{ note: "B4", duration: 0.25}, 
+      { note: "G#4", duration: 0.25 }, { note: "A4", duration: 0.25},  { note: "F#4", duration: 0.25}, { note: "G#4", duration: 0.25}] },
+    { pitches: [{ note: "F4", duration: 0.25 }, { note: "D#4", duration: 0.25 },  { note: "D4", duration: 0.25},{ note: "E4", duration: 0.25}, 
+      { note: "F#4", duration: 0.25}, { note: "G#4", duration: 0.25},  { note: "A#4", duration: 0.5}, 
+      { note: "A4", duration: 0.25 }, { note: "G#4", duration: 0.25 },  { note: "F#4", duration: 0.25},{ note: "F4", duration: 0.25}, 
+      { note: "F#4", duration: 1 }] },
+    { pitches: [{ note: "C#4", duration: 0.5 }, { note: "G#3", duration: 0.5 }, 
+      { note: "C#3", duration: 0.25}, { note: "D#3", duration: 0.25},  { note: "E3", duration: 0.5}, 
+      { note: "F#3", duration: 0.25 }, { note: "C#3", duration: 0.25 },  { note: "D#3", duration: 0.25},{ note: "E3", duration: 0.25}, 
+      { note: "D#3", duration: 0.25 }, { note: "C#3", duration: 0.25},  { note: "C3", duration: 0.5}] },
+    { pitches: [{ note: "G#3", duration: 0.25 }, { note: "C#4", duration: 0.25 },  { note: "D#4", duration: 0.25},{ note: "E4", duration: 0.25}, 
+      { note: "F#4", duration: 0.25}, { note: "E4", duration: 0.25},  { note: "D#4", duration: 0.25}, { note: "C#4", duration: 0.25}, 
+      { note: "B3", duration: 0.25 }, { note: "F#3", duration: 0.25 }, 
+      { note: "A3", duration: 0.375 }, { note: "G#3", duration: 0.125},
+      { note: "C#3", duration: 0.33},{ note: "C3", duration: 0.33},{ note: "C#3", duration: 0.34}] },
+    { pitches: [{ note: "D#3", duration: 0.33 }, { note: "C#3", duration: 0.33 },  { note: "D#3", duration: 0.34},
+      { note: "E3", duration: 0.33}, { note: "C#3", duration: 0.33},  { note: "E3", duration: 0.34}, 
+      { note: "F3", duration: 0.33}, { note: "C#3", duration: 0.33},  { note: "F3", duration: 0.34}, 
+      { note: "G#3", duration: 0.33}, { note: "F3", duration: 0.33},  { note: "G#3", duration: 0.34}] },
+    { pitches: [{ note: "C#4", duration: 0.33 }, { note: "G#4", duration: 0.33 },  { note: "F4", duration: 0.34},
+      { note: "D5", duration: 0.5}, { note: "C#5", duration: 0.5}, 
+      { note: "C5", duration: 0.5}, { note: "B4", duration: 0.5}, 
+      { note: "Bb4", duration: 0.5}, { note: "A4", duration: 0.50}] },
+      { pitches: [{ note: "G#4", duration: 0.5 }, { note: "G4", duration: 0.5 }, 
+        { note: "F4", duration: 0.25}, { note: "C4", duration: 0.25}, { note: "Ab3", duration: 0.25}, { note: "C4", duration: 0.25}, 
+        { note: "Bb3", duration: 0.25}, { note: "Ab3", duration: 0.25}, { note: "G3", duration: 0.25}, { note: "F3", duration: 0.25}, 
+        { note: "C3", duration: 1}] },
   ]};
   let activeAudioSources: AudioBufferSourceNode[] = [];
   let audioContext: AudioContext | null = null;
@@ -147,7 +202,7 @@ export default function Home() {
   const [activeTraversals, setActiveTraversals] = useState({
     preorder: false,
     inorder: false,
-    postorder: false,
+    postorder: true,
     levelorder: true,
   });
   const [debugMode, setDebugMode] = useState(false);
@@ -374,7 +429,7 @@ export default function Home() {
     // Clear all scheduled timeouts
     scheduledTimeouts.forEach((timeout) => clearTimeout(timeout));
     scheduledTimeouts.length = 0;
-  
+    activeAudioSources.length = 0; // not sure this is right
     // Reset node colors
     d3.selectAll("circle").transition().duration(200).style("fill", "white");
   
@@ -456,97 +511,33 @@ export default function Home() {
       .attr("dy", -15)
       .attr("text-anchor", "middle")
       .attr("class", "node-text") // Add class for text
-      .style("display", debugMode ? "block" : "none"); // Show or hide based on debugMode
-  }, [debugMode, mainOrder]); // Add mainOrder to the dependency array
-  useEffect(() => {
-    if (!treeContainerRef.current) return;
-
-    function treeNodeToD3(node: TreeNode | null, id = 0): { name: string; id: number; children?: any[] } | null { // eslint-disable-line @typescript-eslint/no-explicit-any
-      if (!node) return null;
-      return {
-        name: node.measure.pitches
-          .map((pitch) => `${pitch.note} (${pitch.duration * multiplier}ms)`)
-          .join(", "),
-        id,
-        children: [
-          treeNodeToD3(node.left, 2 * id + 1),
-          treeNodeToD3(node.right, 2 * id + 2),
-        ].filter(Boolean),
-      };
-    }
-
-    const treeData = treeNodeToD3(root);
-
-    const width = window.innerWidth;
-    const height = window.innerHeight - 150;
-
-    const svg = d3
-      .select(treeContainerRef.current)
-      .append("svg")
-      .attr("width", width)
-      .attr("height", height)
-      .append("g")
-      .attr("transform", "translate(50,50)");
-
-    const treeLayout = d3.tree().size([width - 100, height - 100]);
-
-    if (!treeData) return;
-    const rootNode = d3.hierarchy(treeData);
-    // @ts-expect-error: lazy to fix
-    treeLayout(rootNode);
-
-    svg
-      .selectAll(".link")
-      .data(rootNode.links())
-      .enter()
-      .append("line")
-      .attr("class", "link")
-      .attr("x1", (d) => d.source.x ?? 0)
-      .attr("y1", (d) => d.source.y ?? 0)
-      .attr("x2", (d) => d.target.x ?? 0)
-      .attr("y2", (d) => d.target.y ?? 0)
-      .style("stroke", "#ccc")
-      .style("stroke-width", 2);
-
-    const nodes = svg
-      .selectAll(".node")
-      .data(rootNode.descendants())
-      .enter()
-      .append("g")
-      .attr("class", "node")
-      .attr("transform", (d) => `translate(${d.x},${d.y})`);
-
-    nodes
-      .append("circle")
-      .attr("r", 30)
-      .attr("id", (d) => `node-${d.data.id}`)
-      .style("fill", "white")
-      .style("stroke", "black");
-
-    nodes
-      .append("text")
-      .attr("dy", -15)
-      .attr("text-anchor", "middle")
-      .attr("class", "node-text") // Add class for text
       .style("display", debugMode ? "block" : "none") // Show or hide based on debugMode
-  });
+      .text((d) => d.data.name
+      .split(", ")
+      .map((noteInfo) => noteInfo.split(" ")[0]) // Extract only the note name
+      .join(", "));
+
+    d3.selectAll(".node-text").style("display", debugMode ? "block" : "none");
+
+  }, [debugMode, mainOrder]); // Add mainOrder to the dependency array
   
   return (
-    <div className="absolute top-0 left-0 w-full h-full bg-gray-100">
-      <div className="absolute top-4 left-0 w-full flex flex-col items-center gap-2">
-        <h1 className="text-2xl font-bold text-black">16 Viola Pieces on Tree Traversal :P</h1>
+    <div className="absolute top-0 left-0 w-full h-full bg-gray-100 overflow-auto">
+      <div className="flex flex-col items-center gap-2">
+        <h1 className="text-5xl font-bold text-black">Tree Traversal</h1>
         <div className="absolute top-4 left-4 flex items-center gap-2">
   <label className="flex items-center gap-2">
+  <span className="text-black font-bold">Verbose Mode</span>
     <input
       type="checkbox"
       checked={debugMode}
       onChange={(e) => setDebugMode(e.target.checked)}
       className="w-6 h-6 rounded cursor-pointer"
     />
-    <span className="text-black font-bold">唠叨模式</span>
+    
   </label>
 </div>
-<div className="absolute top-4 right-4 flex items-center gap-2">
+<div className="absolute top-12 left-4 flex items-center gap-2">
   <label className="flex items-center gap-2">
     <span className="text-black font-bold">Main Order:</span>
     <select
@@ -560,6 +551,11 @@ export default function Home() {
         </option>
       ))}
     </select>
+  </label>
+</div>
+<div className="absolute top-4 right-4 flex items-center gap-2">
+  <label className="flex items-center gap-2">
+    <span className="text-2xl font-bold text-black ">Helena Su</span>
   </label>
 </div>
         <div className="flex gap-4">
@@ -604,9 +600,17 @@ export default function Home() {
         </button>
         </div>
       </div>
-
-      <div ref={treeContainerRef} className="absolute top-[150px] left-0 w-full h-[calc(100%-150px)]">
+      <div ref={treeContainerRef} className="w-full h-[calc(100vh-150px)]">
         {/* D3 tree visualization is rendered here */}
+      </div>
+      <div className="w-full p-4 text-black">
+        <ul className="list-disc list-inside">
+          <li>Inspired by Bach Inventions and Professor Ren's lecture on How to Give a Good Talk (in a tree strucutre)</li>
+          <li>you can select different combinations of orders</li>
+          <li>you can start anywhere by directly clicking on nodes and specifying a main order</li>
+          <li>you can spawn even more by repeatedly clicking on a node</li>
+
+        </ul>
       </div>
     </div>
   );
