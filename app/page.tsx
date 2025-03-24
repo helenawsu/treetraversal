@@ -200,6 +200,7 @@ const scheduledTimeouts: number[] = [];
 
 export default function Home() {
   const [mainOrder, setMainOrder] = useState<keyof typeof activeTraversals>("levelorder");
+  const mainOrderRef = useRef(mainOrder);
   const [activeTraversals, setActiveTraversals] = useState({
     preorder: false,
     inorder: false,
@@ -209,9 +210,15 @@ export default function Home() {
   const [debugMode, setDebugMode] = useState(false);
   const treeContainerRef = useRef<HTMLDivElement>(null);
   const activeTraversalsRef = useRef(activeTraversals);
+
   useEffect(() => {
     activeTraversalsRef.current = activeTraversals;
   }, [activeTraversals]);
+
+  useEffect(() => {
+    mainOrderRef.current = mainOrder;
+  }, [mainOrder]);
+
   const colorMap = {
     preorder: "rgba(255, 0, 0, 0.5)",
     inorder: "rgba(0, 255, 0, 0.5)",
@@ -220,21 +227,20 @@ export default function Home() {
   };
 
   const toggleTraversal = (order: keyof typeof activeTraversals) => {
-    // console.log("toggle", order);
     setActiveTraversals((prev) => ({
       ...prev,
       [order]: !prev[order],
     }));
   };
-  
+
   const handlePlay = async () => {
-    if (!audioContext) { 
+    if (!audioContext) {
       audioContext = new (window.AudioContext || (window as any).webkitAudioContext)(); // eslint-disable-line @typescript-eslint/no-explicit-any
     }
-  
+
     // Load viola instrument
     const instrument = await Soundfont.instrument(audioContext, "viola");
-  
+
     // Get active measures
     const activeMeasures = Object.keys(activeTraversals)
       .filter((order) => activeTraversals[order as keyof typeof activeTraversals])
@@ -242,13 +248,12 @@ export default function Home() {
         measures: traversalMeasures[order as keyof typeof traversalMeasures],
         traversalOrder: order,
       }));
-  
+
     // Play all active measures sequentially
     activeMeasures.forEach(({ measures, traversalOrder }) => {
       playTraversalMeasures(measures, instrument, traversalOrder);
     });
   };
-
 
   const playTraversalMeasures = (
     measures: { pitches: { note: string; duration: number }[] }[],
@@ -257,22 +262,19 @@ export default function Home() {
     startIndex: number = 0
   ) => {
     let currentTime = instrument.context.currentTime; // Start time for the traversal
-    // console.log(traversalOrder);
     measures.slice(startIndex).forEach((measure, index) => {
       const measureDuration = measure.pitches.reduce((sum, pitch) => sum + pitch.duration * multiplier / 1000, 0);
-  
+
       // Get the node index specific to this traversal order
       const nodeId = getTraversalNodeId(index + startIndex, traversalOrder);
-  
+
       // Schedule playback and node highlighting
       const highlightTimeout = setTimeout(() => {
         highlightNode(nodeId, traversalOrder); // Highlight the node
         playMeasure(measure, instrument); // Play the measure
       }, (currentTime - instrument.context.currentTime) * 1000);
       scheduledTimeouts.push(highlightTimeout as unknown as number);
-      // console.log("timeout", scheduledTimeouts);
 
-  
       // Schedule reset of the node color
       const resetTimeout = setTimeout(() => {
         resetNodeColor(nodeId, traversalOrder); // Pass traversal order to reset
@@ -282,22 +284,20 @@ export default function Home() {
       currentTime += measureDuration; // Advance the currentTime for the next measure
     });
   };
-  
-  
-  
+
   const getTraversalNodeId = (index: number, traversalOrder: string): number => {
-  switch (traversalOrder) {
-    case "preorder":
-      return traversalNodeIds.preorder[index];
-    case "inorder":
-      return traversalNodeIds.inorder[index];
-    case "postorder":
-      return traversalNodeIds.postorder[index];
-    case "levelorder":
-    default:
-      return traversalNodeIds.levelorder[index];
-  }
-};
+    switch (traversalOrder) {
+      case "preorder":
+        return traversalNodeIds.preorder[index];
+      case "inorder":
+        return traversalNodeIds.inorder[index];
+      case "postorder":
+        return traversalNodeIds.postorder[index];
+      case "levelorder":
+      default:
+        return traversalNodeIds.levelorder[index];
+    }
+  };
 
   const playMeasure = (
     measure: { pitches: { note: string | "rest"; duration: number }[] },
@@ -319,7 +319,7 @@ export default function Home() {
       }
     });
   };
-  
+
   const activeTraversalsPerNode: { [nodeId: number]: string[] } = {};
 
   const highlightNode = (nodeId: number, traversalOrder: string) => {
@@ -330,17 +330,17 @@ export default function Home() {
     if (!activeTraversalsPerNode[nodeId].includes(traversalOrder)) {
       activeTraversalsPerNode[nodeId].push(traversalOrder);
     }
-  
+
     // Recalculate the blended color
     const blendedColor = activeTraversalsPerNode[nodeId]
       .map((order) => colorMap[order as keyof typeof colorMap])
       .reduce((acc, color) => blendColors(acc, color)); // Blend all active traversal colors
-  
+
     // Apply the new color
     const node = d3.select(`#node-${nodeId}`);
     node.transition().duration(200).style("fill", blendedColor);
   };
-  
+
   const resetNodeColor = (nodeId: number, traversalOrder: string) => {
     // Remove the traversal order from the active list for the node
     if (activeTraversalsPerNode[nodeId]) {
@@ -348,7 +348,7 @@ export default function Home() {
         (order) => order !== traversalOrder
       );
     }
-  
+
     // Recalculate the blended color or reset to white
     const node = d3.select(`#node-${nodeId}`);
     if (activeTraversalsPerNode[nodeId] && activeTraversalsPerNode[nodeId].length > 0) {
@@ -360,7 +360,7 @@ export default function Home() {
       node.transition().duration(200).style("fill", "white"); // Reset to white if no active traversals
     }
   };
-  
+
   const blendColors = (color1: string, color2: string) => {
     const rgba1 = parseRGBA(color1);
     const rgba2 = parseRGBA(color2);
@@ -381,18 +381,16 @@ export default function Home() {
         }
       : { r: 255, g: 255, b: 255, a: 1 }; // Default to white if parsing fails
   };
+
   const handleNodeClick = (nodeId: number) => {
-    // handleClear();
     if (!audioContext) {
       audioContext = new (window.AudioContext || (window as any).webkitAudioContext)(); // eslint-disable-line @typescript-eslint/no-explicit-any
     }
-  
-    Soundfont.instrument(audioContext, "viola").then((instrument) => {
-      const startIndex = traversalNodeIds[mainOrder].indexOf(nodeId);
 
-  
+    Soundfont.instrument(audioContext, "viola").then((instrument) => {
+      const startIndex = traversalNodeIds[mainOrderRef.current].indexOf(nodeId);
+
       // Get active measures starting from the clicked node
-      // console.log("hi", activeTraversalsRef.current);
       const activeMeasures = Object.keys(activeTraversalsRef.current)
         .filter((order) => activeTraversalsRef.current[order as keyof typeof activeTraversals])
         .map((order) => {
@@ -404,46 +402,44 @@ export default function Home() {
             startIndex: correspondingIndex,
           };
         });
-      
+
       // Play all active measures sequentially
       activeMeasures.forEach(({ measures, traversalOrder, startIndex }) => {
         playTraversalMeasures(measures, instrument, traversalOrder, startIndex);
       });
-      // console.log("hiii", scheduledTimeouts);
     });
   };
+
   const handleClear = () => {
     // Stop all active playing audios
     activeAudioSources.forEach(source => {
       source.stop();
     });
     activeAudioSources = [];
-  
+
     // Close the AudioContext if it exists
     if (audioContext) {
       audioContext.close().then(() => {
-        // console.log("Audio context closed and all active playing audios stopped.");
         audioContext = null; // Reset the audioContext
       });
     }
-  
+
     // Clear all scheduled timeouts
     scheduledTimeouts.forEach((timeout) => clearTimeout(timeout));
     scheduledTimeouts.length = 0;
     activeAudioSources.length = 0; // not sure this is right
     // Reset node colors
     d3.selectAll("circle").transition().duration(200).style("fill", "white");
-  
+
     // Clear active traversals per node
     Object.keys(activeTraversalsPerNode).forEach((nodeId) => {
       activeTraversalsPerNode[parseInt(nodeId)] = [];
     });
-  
-    // console.log("All active audio sources stopped and scheduled timeouts cleared.");
   };
+
   useEffect(() => {
     if (!treeContainerRef.current) return;
-  
+
     function treeNodeToD3(node: TreeNode | null, id = 0): { name: string; id: number; children?: any[] } | null { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (!node) return null;
       return {
@@ -457,12 +453,12 @@ export default function Home() {
         ].filter(Boolean),
       };
     }
-  
+
     const treeData = treeNodeToD3(root);
-  
+
     const width = window.innerWidth;
     const height = window.innerHeight - 150;
-  
+
     const svg = d3
       .select(treeContainerRef.current)
       .append("svg")
@@ -470,14 +466,14 @@ export default function Home() {
       .attr("height", height)
       .append("g")
       .attr("transform", "translate(50,50)");
-  
+
     const treeLayout = d3.tree().size([width - 100, height - 100]);
-  
+
     if (!treeData) return;
     const rootNode = d3.hierarchy(treeData);
     // @ts-expect-error: lazy to fix
     treeLayout(rootNode);
-  
+
     svg
       .selectAll(".link")
       .data(rootNode.links())
@@ -490,7 +486,7 @@ export default function Home() {
       .attr("y2", (d) => d.target.y ?? 0)
       .style("stroke", "#ccc")
       .style("stroke-width", 2);
-  
+
     const nodes = svg
       .selectAll(".node")
       .data(rootNode.descendants())
@@ -499,14 +495,14 @@ export default function Home() {
       .attr("class", "node")
       .attr("transform", (d) => `translate(${d.x},${d.y})`)
       .on("click", (event, d) => handleNodeClick(d.data.id)); // Add click event listener
-  
+
     nodes
       .append("circle")
       .attr("r", 30)
       .attr("id", (d) => `node-${d.data.id}`)
       .style("fill", "white")
       .style("stroke", "black");
-  
+
     nodes
       .append("text")
       .attr("dy", -15)
