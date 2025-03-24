@@ -610,7 +610,11 @@ export default function Home() {
           <li>you can select different combinations of orders</li>
           <li>you can start anywhere by directly clicking on nodes and specifying a main order</li>
           <li>you can spawn even more by repeatedly clicking on a node</li>
-
+          <li>
+            <a href="https://github.com/helenawsu/treetraversal" target="_blank" rel="noopener noreferrer">
+              GitHub
+            </a>
+          </li>
         </ul>
       </div>
     </div>
