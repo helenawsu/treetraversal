@@ -104,6 +104,7 @@ const traversalMeasures = {
   let audioContext: AudioContext | null = null;
   
   // Function to play a note (example)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const playNote = (audioContext: AudioContext, buffer: AudioBuffer) => {
     const source = audioContext.createBufferSource();
     source.buffer = buffer;
@@ -227,8 +228,8 @@ export default function Home() {
   };
   
   const handlePlay = async () => {
-    if (!audioContext) {
-      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    if (!audioContext) { 
+      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)(); // eslint-disable-line @typescript-eslint/no-explicit-any
     }
   
     // Load viola instrument
@@ -383,7 +384,7 @@ export default function Home() {
   const handleNodeClick = (nodeId: number) => {
     // handleClear();
     if (!audioContext) {
-      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContext = new (window.AudioContext || (window as any).webkitAudioContext)(); // eslint-disable-line @typescript-eslint/no-explicit-any
     }
   
     Soundfont.instrument(audioContext, "viola").then((instrument) => {
@@ -605,7 +606,7 @@ export default function Home() {
       </div>
       <div className="w-full p-4 text-black">
         <ul className="list-disc list-inside">
-          <li>Inspired by Bach Inventions and Professor Ren's lecture on How to Give a Good Talk (in a tree strucutre)</li>
+          <li>Inspired by Bach Inventions and Professor Ren&apos;s lecture on How to Give a Good Talk (in a tree strucutre)</li>
           <li>you can select different combinations of orders</li>
           <li>you can start anywhere by directly clicking on nodes and specifying a main order</li>
           <li>you can spawn even more by repeatedly clicking on a node</li>
