@@ -208,7 +208,8 @@ export default function Home() {
     levelorder: true,
   });
   const [debugMode, setDebugMode] = useState(false);
-  const treeContainerRef = useRef<HTMLDivElement>(null);
+  const largeScreenTreeContainerRef = useRef<HTMLDivElement>(null);
+  const smallScreenTreeContainerRef = useRef<HTMLDivElement>(null);
   const activeTraversalsRef = useRef(activeTraversals);
 
   useEffect(() => {
@@ -438,10 +439,15 @@ export default function Home() {
   };
 
   useEffect(() => {
-    if (!treeContainerRef.current) return;
+    const isLargeScreen = window.innerWidth >= 768; // Tailwind's `md` breakpoint
+    const treeContainer = isLargeScreen
+      ? largeScreenTreeContainerRef.current
+      : smallScreenTreeContainerRef.current;
+
+    if (!treeContainer) return;
 
     // Clear existing SVG content
-    d3.select(treeContainerRef.current).select("svg").remove();
+    d3.select(treeContainer).select("svg").remove();
 
     function treeNodeToD3(node: TreeNode | null, id = 0): { name: string; id: number; children?: any[] } | null { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (!node) return null;
@@ -459,11 +465,11 @@ export default function Home() {
 
     const treeData = treeNodeToD3(root);
 
-    const width = window.innerWidth;
-    const height = window.innerHeight - 150;
+    const width = treeContainer.offsetWidth;
+    const height = treeContainer.offsetHeight;
 
     const svg = d3
-      .select(treeContainerRef.current)
+      .select(treeContainer)
       .append("svg")
       .attr("width", width)
       .attr("height", height)
@@ -523,98 +529,183 @@ export default function Home() {
   
   return (
     <div className="absolute top-0 left-0 w-full h-full bg-gray-100 overflow-auto">
-      <div className="flex flex-col items-center gap-2">
-        <h1 className="text-5xl font-bold text-black">Tree Traversal</h1>
-        <div className="absolute top-4 left-4 flex items-center gap-2">
-  <label className="flex items-center gap-2">
-  <span className="text-black font-bold">Verbose Mode</span>
-    <input
-      type="checkbox"
-      checked={debugMode}
-      onChange={(e) => setDebugMode(e.target.checked)}
-      className="w-6 h-6 rounded cursor-pointer"
-    />
-    
-  </label>
-</div>
-<div className="absolute top-12 left-4 flex items-center gap-2">
-  <label className="flex items-center gap-2">
-    <span className="text-black font-bold">Main Order:</span>
-    <select
-      value={mainOrder}
-      onChange={(e) => setMainOrder(e.target.value as keyof typeof activeTraversals)}
-      className="w-32 h-8 rounded cursor-pointer"
-    >
-      {["preorder", "inorder", "postorder", "levelorder"].map((order) => (
-        <option key={order} value={order}>
-          {order.charAt(0).toUpperCase() + order.slice(1)}
-        </option>
-      ))}
-    </select>
-  </label>
-</div>
-<div className="absolute top-4 right-4 flex items-center gap-2">
-  <label className="flex items-center gap-2">
-    <span className="text-2xl font-bold text-black ">Helena Su</span>
-  </label>
-</div>
-        <div className="flex gap-4">
-  {["preorder", "inorder", "postorder", "levelorder"].map((order) => (
-    <label key={order} className="flex items-center gap-2">
-      <input
-        type="checkbox"
-        checked={activeTraversals[order as keyof typeof activeTraversals]}
-        onChange={() => toggleTraversal(order as keyof typeof activeTraversals)}
-        style={{
-          accentColor: colorMap[order as keyof typeof colorMap], // Set the checkbox color dynamically
-        }}
-        className="w-8 h-8 rounded cursor-pointer"
-      />
-      {debugMode && ( // Only render the label text when debugMode is true
-        <span
-        className="font-bold"
-        style={{
-          color: colorMap[order as keyof typeof colorMap], // Set text color to match the order's color
-        }}
-      >
-          {order.charAt(0).toUpperCase() + order.slice(1)}
-        </span>
-      )}
-    </label>
-  ))}
-</div>
-
-
-<div className="flex gap-4">
-        <button
-          onClick={handlePlay}
-          className="mt-4 px-6 py-2 bg-gray-500 text-white rounded-lg shadow hover:bg-gray-600"
-        >
-          Play Music
-        </button>
-        <button
-          onClick={handleClear}
-          className="mt-4 px-6 py-2 bg-gray-500 text-white rounded-lg shadow hover:bg-gray-600"
-        >
-          Clear
-        </button>
+      {/* Large screen layout */}
+      <div className="hidden md:block">
+        <div className="flex flex-col items-center gap-2">
+          <h1 className="text-5xl font-bold text-black">Tree Traversal</h1>
+          <div className="absolute top-4 left-4 flex items-center gap-2">
+            <label className="flex items-center gap-2">
+              <span className="text-black font-bold">Verbose Mode</span>
+              <input
+                type="checkbox"
+                checked={debugMode}
+                onChange={(e) => setDebugMode(e.target.checked)}
+                className="w-6 h-6 rounded cursor-pointer"
+              />
+            </label>
+            <label className="flex items-center gap-2">
+              <span className="text-black font-bold">Main Order:</span>
+              <select
+                value={mainOrder}
+                onChange={(e) => setMainOrder(e.target.value as keyof typeof activeTraversals)}
+                className="w-32 h-8 rounded cursor-pointer"
+              >
+                {["preorder", "inorder", "postorder", "levelorder"].map((order) => (
+                  <option key={order} value={order}>
+                    {order.charAt(0).toUpperCase() + order.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="absolute top-4 right-4 flex items-center gap-2">
+            <label className="flex items-center gap-2">
+              <span className="text-2xl font-bold text-black ">Helena Su</span>
+            </label>
+          </div>
+          <div className="flex gap-4">
+            {["preorder", "inorder", "postorder", "levelorder"].map((order) => (
+              <label key={order} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={activeTraversals[order as keyof typeof activeTraversals]}
+                  onChange={() => toggleTraversal(order as keyof typeof activeTraversals)}
+                  style={{
+                    accentColor: colorMap[order as keyof typeof colorMap], // Set the checkbox color dynamically
+                  }}
+                  className="w-8 h-8 rounded cursor-pointer"
+                />
+                {debugMode && (
+                  <span
+                    className="font-bold"
+                    style={{
+                      color: colorMap[order as keyof typeof colorMap], // Set text color to match the order's color
+                    }}
+                  >
+                    {order.charAt(0).toUpperCase() + order.slice(1)}
+                  </span>
+                )}
+              </label>
+            ))}
+          </div>
+          <div className="flex gap-4">
+            <button
+              onClick={handlePlay}
+              className="mt-4 px-6 py-2 bg-gray-500 text-white rounded-lg shadow hover:bg-gray-600"
+            >
+              Play Music
+            </button>
+            <button
+              onClick={handleClear}
+              className="mt-4 px-6 py-2 bg-gray-500 text-white rounded-lg shadow hover:bg-gray-600"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+        <div ref={largeScreenTreeContainerRef} className="w-full h-[calc(100vh-150px)]">
+          {/* D3 tree visualization is rendered here */}
+        </div>
+        <div className="w-full p-4 text-black">
+          <ul className="list-disc list-inside">
+            <li>Inspired by Bach Inventions and Professor Ren&apos;s lecture on How to Give a Good Talk (in a tree strucutre)</li>
+            <li>you can select different combinations of orders</li>
+            <li>you can start anywhere by directly clicking on nodes and specifying a main order</li>
+            <li>you can spawn even more by repeatedly clicking on a node</li>
+            <li>
+              <a href="https://github.com/helenawsu/treetraversal" target="_blank" rel="noopener noreferrer">
+                GitHub
+              </a>
+            </li>
+          </ul>
         </div>
       </div>
-      <div ref={treeContainerRef} className="w-full h-[calc(100vh-150px)]">
-        {/* D3 tree visualization is rendered here */}
-      </div>
-      <div className="w-full p-4 text-black">
-        <ul className="list-disc list-inside">
-          <li>Inspired by Bach Inventions and Professor Ren&apos;s lecture on How to Give a Good Talk (in a tree strucutre)</li>
-          <li>you can select different combinations of orders</li>
-          <li>you can start anywhere by directly clicking on nodes and specifying a main order</li>
-          <li>you can spawn even more by repeatedly clicking on a node</li>
-          <li>
-            <a href="https://github.com/helenawsu/treetraversal" target="_blank" rel="noopener noreferrer">
-              GitHub
-            </a>
-          </li>
-        </ul>
+
+      {/* Small screen layout */}
+      <div className="block md:hidden">
+        <div className="flex flex-col items-center gap-4 p-4">
+          <h1 className="text-4xl font-bold text-black text-center">Tree Traversal - Helena Su</h1>
+          <div className="flex flex-row items-center gap-4">
+            <label className="flex items-center gap-2">
+              <span className="text-black font-bold">Verbose Mode</span>
+              <input
+                type="checkbox"
+                checked={debugMode}
+                onChange={(e) => setDebugMode(e.target.checked)}
+                className="w-6 h-6 rounded cursor-pointer"
+              />
+            </label>
+            <label className="flex items-center gap-2">
+              <span className="text-black font-bold">Main Order:</span>
+              <select
+                value={mainOrder}
+                onChange={(e) => setMainOrder(e.target.value as keyof typeof activeTraversals)}
+                className="w-32 h-8 rounded cursor-pointer"
+              >
+                {["preorder", "inorder", "postorder", "levelorder"].map((order) => (
+                  <option key={order} value={order}>
+                    {order.charAt(0).toUpperCase() + order.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className="flex flex-wrap justify-center gap-4">
+            {["preorder", "inorder", "postorder", "levelorder"].map((order) => (
+              <label key={order} className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={activeTraversals[order as keyof typeof activeTraversals]}
+                  onChange={() => toggleTraversal(order as keyof typeof activeTraversals)}
+                  style={{
+                    accentColor: colorMap[order as keyof typeof colorMap],
+                  }}
+                  className="w-8 h-8 rounded cursor-pointer"
+                />
+                {debugMode && (
+                  <span
+                    className="font-bold"
+                    style={{
+                      color: colorMap[order as keyof typeof colorMap], // Set text color to match the order's color
+                    }}
+                  >
+                    {order.charAt(0).toUpperCase() + order.slice(1)}
+                  </span>
+                )}
+              </label>
+            ))}
+          </div>
+          <div className="flex flex-wrap justify-center gap-4">
+            <button
+              onClick={handlePlay}
+              className="px-6 py-2 bg-gray-500 text-white rounded-lg shadow hover:bg-gray-600"
+            >
+              Play Music
+            </button>
+            <button
+              onClick={handleClear}
+              className="px-6 py-2 bg-gray-500 text-white rounded-lg shadow hover:bg-gray-600"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+        <div ref={smallScreenTreeContainerRef} className="w-full h-[calc(100vh-150px)]">
+          {/* D3 tree visualization is rendered here */}
+        </div>
+        <div className="w-full p-4 text-black">
+          <ul className="list-disc list-inside">
+            <li>Inspired by Bach Inventions and Professor Ren&apos;s lecture on How to Give a Good Talk (in a tree structure)</li>
+            <li>You can select different combinations of orders</li>
+            <li>You can start anywhere by directly clicking on nodes and specifying a main order</li>
+            <li>You can spawn even more by repeatedly clicking on a node</li>
+            <li>
+              <a href="https://github.com/helenawsu/treetraversal" target="_blank" rel="noopener noreferrer">
+                GitHub
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   );
