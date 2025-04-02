@@ -440,6 +440,9 @@ export default function Home() {
   useEffect(() => {
     if (!treeContainerRef.current) return;
 
+    // Clear existing SVG content
+    d3.select(treeContainerRef.current).select("svg").remove();
+
     function treeNodeToD3(node: TreeNode | null, id = 0): { name: string; id: number; children?: any[] } | null { // eslint-disable-line @typescript-eslint/no-explicit-any
       if (!node) return null;
       return {
